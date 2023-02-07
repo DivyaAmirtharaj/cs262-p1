@@ -4,13 +4,27 @@ package grpc;
 
 message Empty {}
 
+message User {
+    int64 uuid = 1;
+    string username = 2;
+    string password = 3;
+}
+
 message Chat {
-    string name = 1;
-    string message = 2;
+    int64 from_uuid = 1;
+    int64 to_id = 2;
+    string username = 3;
+    string msg = 4;
+}
+
+message Response {
+    int64 err_type = 1;
+    string msg = 2;
 }
 
 service ChatServer {
-    // This bi-directional stream makes it possible to send and receive Notes between 2 persons
-    rpc ChatStream (Empty) returns (stream Chat);
-    rpc SendNote (Chat) returns (Empty);
+    rpc create_account (Empty) returns (User);
+    rpc delete_account (User) returns (Empty);
+    rpc chat_stream (Empty) returns (stream Chat);
+    rpc send_chat (Chat) returns (Empty);
 }

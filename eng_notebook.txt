@@ -4,5 +4,8 @@ Potentially start with gRPCs
 Throw exceptions or else
 
 Starting with a gRPC
-1. create a proto file to define fixed structure
-2. 
+1. create a proto file to define fixed structure: defined "chat" and "empty" in the .proto file using proto3
+- Installation of proto3: brew install protobuf
+- Install vscode-proto3 in Marketplace on vscode
+- Create a proto file (specify proto3)
+- Create a synced, executable proto file: protoc -I=. --python_out=. ./service.proto 

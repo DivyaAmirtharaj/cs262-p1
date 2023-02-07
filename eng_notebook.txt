@@ -2,3 +2,7 @@ DK Engineering Notebook
 
 Potentially start with gRPCs
 Throw exceptions or else
+
+Starting with a gRPC
+1. create a proto file to define fixed structure
+2. 

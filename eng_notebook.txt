@@ -7,10 +7,9 @@ Starting with a gRPC
 1. Install gRPC
 - Install grpcio (need pip3): python -m pip install grpcio
 - Install grpcio tools: python -m pip install grpcio-tools
-- Create synced python: python -m grpc_tools.protoc -I=. --grpc_python_out=. ./service.proto
 
 2. Install Proto: create a proto file to define fixed structure: defined "chat" and "empty" in the .proto file using proto3
 - Installation of proto3: brew install protobuf
 - Install vscode-proto3 in Marketplace on vscode
 - Create a proto file (specify proto3)
-- Create a synced, executable proto file: protoc -I=. --python_out=. ./service.proto 
+- Create a synced, executable proto file: python -m grpc_tools.protoc -I protos --python_out=./protos  --grpc_python_out=./protos protos/service.proto

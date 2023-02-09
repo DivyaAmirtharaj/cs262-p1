@@ -12,4 +12,4 @@ Starting with a gRPC
 - Installation of proto3: brew install protobuf
 - Install vscode-proto3 in Marketplace on vscode
 - Create a proto file (specify proto3)
-- Create a synced, executable proto file: python -m grpc_tools.protoc -I protos --python_out=./protos  --grpc_python_out=./protos protos/service.proto
+- Create a synced, executable proto file: python -m grpc_tools.protoc -I=protos/ --python_out=protos/ --grpc_python_out=protos/ protos/service.proto

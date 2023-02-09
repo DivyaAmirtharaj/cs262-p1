@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import service_pb2 as service__pb2
+from protos import service_pb2 as protos_dot_service__pb2
 
 
 class ChatServerStub(object):
@@ -16,28 +16,28 @@ class ChatServerStub(object):
         """
         self.SayHello = channel.unary_unary(
                 '/grpc.ChatServer/SayHello',
-                request_serializer=service__pb2.HelloRequest.SerializeToString,
-                response_deserializer=service__pb2.HelloReply.FromString,
+                request_serializer=protos_dot_service__pb2.HelloRequest.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.HelloReply.FromString,
                 )
         self.create_account = channel.unary_unary(
                 '/grpc.ChatServer/create_account',
-                request_serializer=service__pb2.Empty.SerializeToString,
-                response_deserializer=service__pb2.User.FromString,
+                request_serializer=protos_dot_service__pb2.Empty.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.User.FromString,
                 )
         self.delete_account = channel.unary_unary(
                 '/grpc.ChatServer/delete_account',
-                request_serializer=service__pb2.User.SerializeToString,
-                response_deserializer=service__pb2.Empty.FromString,
+                request_serializer=protos_dot_service__pb2.User.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Empty.FromString,
                 )
         self.chat_stream = channel.unary_stream(
                 '/grpc.ChatServer/chat_stream',
-                request_serializer=service__pb2.Empty.SerializeToString,
-                response_deserializer=service__pb2.Chat.FromString,
+                request_serializer=protos_dot_service__pb2.Empty.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Chat.FromString,
                 )
         self.send_chat = channel.unary_unary(
                 '/grpc.ChatServer/send_chat',
-                request_serializer=service__pb2.Chat.SerializeToString,
-                response_deserializer=service__pb2.Empty.FromString,
+                request_serializer=protos_dot_service__pb2.Chat.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Empty.FromString,
                 )
 
 
@@ -79,28 +79,28 @@ def add_ChatServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SayHello': grpc.unary_unary_rpc_method_handler(
                     servicer.SayHello,
-                    request_deserializer=service__pb2.HelloRequest.FromString,
-                    response_serializer=service__pb2.HelloReply.SerializeToString,
+                    request_deserializer=protos_dot_service__pb2.HelloRequest.FromString,
+                    response_serializer=protos_dot_service__pb2.HelloReply.SerializeToString,
             ),
             'create_account': grpc.unary_unary_rpc_method_handler(
                     servicer.create_account,
-                    request_deserializer=service__pb2.Empty.FromString,
-                    response_serializer=service__pb2.User.SerializeToString,
+                    request_deserializer=protos_dot_service__pb2.Empty.FromString,
+                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
             'delete_account': grpc.unary_unary_rpc_method_handler(
                     servicer.delete_account,
-                    request_deserializer=service__pb2.User.FromString,
-                    response_serializer=service__pb2.Empty.SerializeToString,
+                    request_deserializer=protos_dot_service__pb2.User.FromString,
+                    response_serializer=protos_dot_service__pb2.Empty.SerializeToString,
             ),
             'chat_stream': grpc.unary_stream_rpc_method_handler(
                     servicer.chat_stream,
-                    request_deserializer=service__pb2.Empty.FromString,
-                    response_serializer=service__pb2.Chat.SerializeToString,
+                    request_deserializer=protos_dot_service__pb2.Empty.FromString,
+                    response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
             ),
             'send_chat': grpc.unary_unary_rpc_method_handler(
                     servicer.send_chat,
-                    request_deserializer=service__pb2.Chat.FromString,
-                    response_serializer=service__pb2.Empty.SerializeToString,
+                    request_deserializer=protos_dot_service__pb2.Chat.FromString,
+                    response_serializer=protos_dot_service__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -124,8 +124,8 @@ class ChatServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/SayHello',
-            service__pb2.HelloRequest.SerializeToString,
-            service__pb2.HelloReply.FromString,
+            protos_dot_service__pb2.HelloRequest.SerializeToString,
+            protos_dot_service__pb2.HelloReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -141,8 +141,8 @@ class ChatServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/create_account',
-            service__pb2.Empty.SerializeToString,
-            service__pb2.User.FromString,
+            protos_dot_service__pb2.Empty.SerializeToString,
+            protos_dot_service__pb2.User.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,8 +158,8 @@ class ChatServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/delete_account',
-            service__pb2.User.SerializeToString,
-            service__pb2.Empty.FromString,
+            protos_dot_service__pb2.User.SerializeToString,
+            protos_dot_service__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -175,8 +175,8 @@ class ChatServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/grpc.ChatServer/chat_stream',
-            service__pb2.Empty.SerializeToString,
-            service__pb2.Chat.FromString,
+            protos_dot_service__pb2.Empty.SerializeToString,
+            protos_dot_service__pb2.Chat.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -192,7 +192,7 @@ class ChatServer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/send_chat',
-            service__pb2.Chat.SerializeToString,
-            service__pb2.Empty.FromString,
+            protos_dot_service__pb2.Chat.SerializeToString,
+            protos_dot_service__pb2.Empty.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -14,21 +14,6 @@ class ChatServerStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SayHello = channel.unary_unary(
-                '/grpc.ChatServer/SayHello',
-                request_serializer=protos_dot_service__pb2.HelloRequest.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.HelloReply.FromString,
-                )
-        self.create_account = channel.unary_unary(
-                '/grpc.ChatServer/create_account',
-                request_serializer=protos_dot_service__pb2.Empty.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.User.FromString,
-                )
-        self.delete_account = channel.unary_unary(
-                '/grpc.ChatServer/delete_account',
-                request_serializer=protos_dot_service__pb2.User.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.Empty.FromString,
-                )
         self.chat_stream = channel.unary_stream(
                 '/grpc.ChatServer/chat_stream',
                 request_serializer=protos_dot_service__pb2.Empty.SerializeToString,
@@ -43,24 +28,6 @@ class ChatServerStub(object):
 
 class ChatServerServicer(object):
     """Missing associated documentation comment in .proto file."""
-
-    def SayHello(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def create_account(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def delete_account(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def chat_stream(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -77,21 +44,6 @@ class ChatServerServicer(object):
 
 def add_ChatServerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SayHello': grpc.unary_unary_rpc_method_handler(
-                    servicer.SayHello,
-                    request_deserializer=protos_dot_service__pb2.HelloRequest.FromString,
-                    response_serializer=protos_dot_service__pb2.HelloReply.SerializeToString,
-            ),
-            'create_account': grpc.unary_unary_rpc_method_handler(
-                    servicer.create_account,
-                    request_deserializer=protos_dot_service__pb2.Empty.FromString,
-                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
-            ),
-            'delete_account': grpc.unary_unary_rpc_method_handler(
-                    servicer.delete_account,
-                    request_deserializer=protos_dot_service__pb2.User.FromString,
-                    response_serializer=protos_dot_service__pb2.Empty.SerializeToString,
-            ),
             'chat_stream': grpc.unary_stream_rpc_method_handler(
                     servicer.chat_stream,
                     request_deserializer=protos_dot_service__pb2.Empty.FromString,
@@ -111,57 +63,6 @@ def add_ChatServerServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class ChatServer(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def SayHello(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/SayHello',
-            protos_dot_service__pb2.HelloRequest.SerializeToString,
-            protos_dot_service__pb2.HelloReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def create_account(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/create_account',
-            protos_dot_service__pb2.Empty.SerializeToString,
-            protos_dot_service__pb2.User.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def delete_account(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatServer/delete_account',
-            protos_dot_service__pb2.User.SerializeToString,
-            protos_dot_service__pb2.Empty.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def chat_stream(request,

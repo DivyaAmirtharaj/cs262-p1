@@ -4,14 +4,6 @@ package grpc;
 
 message Empty {}
 
-message HelloRequest {
-    string name = 1;
-}
-
-message HelloReply {
-    string message = 1;
-}
-
 message User {
     int64 uuid = 1;
     string username = 2;
@@ -31,9 +23,6 @@ message Response {
 }
 
 service ChatServer {
-    rpc SayHello (HelloRequest) returns (HelloReply);
-    rpc create_account (Empty) returns (User);
-    rpc delete_account (User) returns (Empty);
     rpc chat_stream (Empty) returns (stream Chat);
     rpc send_chat (Chat) returns (Empty);
 }

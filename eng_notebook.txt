@@ -13,3 +13,5 @@ Starting with a gRPC
 - Install vscode-proto3 in Marketplace on vscode
 - Create a proto file (specify proto3)
 - Create a synced, executable proto file: python -m grpc_tools.protoc --proto_path=. protos/service.proto --python_out=. --grpc_python_out=.
+
+3. Create definitions for what we want to execute

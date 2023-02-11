@@ -22,7 +22,7 @@ message Response {
     string msg = 2;
 }
 
-service ChatServer {
-    rpc chat_stream (Empty) returns (stream Chat);
+service ChatBot {
     rpc send_chat (Chat) returns (Empty);
+    rpc receive_chat (User) returns (Chat);
 }

@@ -24,4 +24,3 @@ class ChatClient:
         # need to figure out protocol stuff: max message length, how to 
         # indicate recipient, etc.
 
-

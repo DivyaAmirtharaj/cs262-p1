@@ -14,13 +14,26 @@ class ChatClient:
         self.uuid = None
         self.online = False
 
+    def recv_from_server(self, socket):
+        # finish
+
+    def listener(self):
+        """
+        Listens forever for new messages from users delivered through the server
+        and server responses. New messages are directly printed to stdout, server
+        responses are queue'd up to be handled later
+        """
+        while True: 
+            status, message = self.recv_from_server(self.socket)
+
+    
     # method to register a new account, let user give parameters on command line?
-    def register_account(self, username, password):
-        # code here
-        print("need to implement")
+    def create_account(self, username, password):
+        
     
     def connect(self):
         self.socket.connect((self.host, self.port))
+        thread.start_new_thread(self.listener, ())
 
     def send_message(self, recipient, message):
         msg_len = len(message)

@@ -33,7 +33,7 @@ class ChatServer:
             return False
         user_to_send_sock = user_sockets[user_to_send]
         if user_to_send in currentlyOnlineList:
-            self.send_message(user_to_send_sock, message)
+            self.send_message(user_to_send_sock, 0, message)
         
         return True
         #else: finish queueing messages later

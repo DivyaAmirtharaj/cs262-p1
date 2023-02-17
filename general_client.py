@@ -2,6 +2,7 @@ import socket
 import sys
 import select
 import thread
+import random
 
 class ChatClient:
 
@@ -10,6 +11,8 @@ class ChatClient:
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.username = None
+        self.uuid = None
+        self.online = False
 
     # method to register a new account, let user give parameters on command line?
     def register_account(self, username, password):
@@ -21,6 +24,6 @@ class ChatClient:
 
     def send_message(self, recipient, message):
         msg_len = len(message)
-        # need to figure out protocol stuff: max message length, how to 
-        # indicate recipient, etc.
+        
+
 

@@ -14,22 +14,55 @@ class ChatServer:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.user_sockets = {}
         self.accountName_table = {}
+        self.uuid_dict = {}
         self.currentlyOnlineList = []
 
-    def send_message(self, sock, message):
+    def send_message(self, sock, status, message):
         message_len = len(message)
         if message_len > MAX_MSG_LEN:
             print("Message too long")
         
-        to_send = chr(message_len) + message
+        to_send = chr(status) + chr(message_len) + message
         sock.sendall(to_send)
+    
+    def send_response(self, sock, status, *args):
+        self.send_message(sock, status, ":".join(args))
 
     def send_or_queue_message(self, message, user_from, user_to_send):
+        if user_to_send not in self.accountName_table:
+            return False
         user_to_send_sock = user_sockets[user_to_send]
         if user_to_send in currentlyOnlineList:
-            data = self.send_message(user_to_send_sock, message)
+            self.send_message(user_to_send_sock, message)
+        
+        return True
         #else: finish queueing messages later
-
+    
+    def create_account(self, username, pwd):  
+        hashedPwd = hash(pwd) 
+        if username in self.accountName_table:
+            return False, -1
+        else:
+            # hashed for security
+            pwdHash = hash(accountPwd)
+            self.accountName_table[accountName] = pwdHash
+            self.user_sockets[accountName] = None
+            uuid = random.randint(0, 100)
+            print("New account: " + accountName)
+            
+            return True, uuid
+        
+    def login(self, username, pwd):
+        if accountName not in accountName_table:
+            print("Invalid account name")
+            return False
+        elif hashedPwd != self.accountName_table[accountName]:
+            print("Invalid password")
+            return False
+        else:
+            self.user_sockets[accountName] = c
+            self.currentlyOnlineList.append(accountName)
+            return True
 
     def threaded(self, c):
         while True:
@@ -45,46 +78,45 @@ class ChatServer:
 
             if opcode == "1":
                 if len(data_list) < 3:
-                    data = "Did not provide a valid account name or password"
+                    self.send_message(c, 2, "Not enough params")
                 else:
                     accountName = str(data_list[1])
                     accountPwd = str(data_list[2])
                     
-                    if accountName in accountName_table:
-                        data = "Account name already taken\n"
+                    success, uuid = self.create_account(accountName, accountPwd)
+                    if success:
+                        self.uuid_dict[uuid] = accountName
+                        self.send_message(c, 0, chr(uuid))
                     else:
-                        # hashed for security
-                        pwdHash = hash(accountPwd)
-                        self.accountName_table[accountName] = pwdHash
-                        self.currentlyOnlineList.append(accountName)
-                        sockets_by_user[accountName] = None
-                        print("New account: " + accountName)
-                        data = "Account " + accountName + "created\n"
+                        self.send_message(c, 1, "Failed account creation")
             elif opcode == "2":
                 if len(data_list) < 3:
-                    data = "Did not provide a valid account name or password\n"
+                    self.send_message(c, 2, "Not enough params")
                 else: 
                     accountName = str(data_list[1])
                     accountPwd = str(data_list[2])
-                    hashedPwd = hash(accountPwd)
                     
-                    if accountName not in accountName_table:
-                        print("Invalid account name")
-                        data = "Account name " + accountName + " not registered\n"
-                    elif hashedPwd != self.accountName_table[accountName]:
-                        print("Invalid password")
-                        data = "Account name " + accountName + " password was incorrect\n"
+                    success = self.login(accountName, accountPwd)
+                    if success:
+                        self.send_message(c, 0, "")
                     else:
-                        self.user_sockets[accountName] = c
-                        self.currentlyOnlineList.append(accountName)
-                        data = "Logged in successfully!"
+                        self.send_message(c, 1, "Failed login")
+
             elif opcode == "3":
                 if len(data_list) < 3:
-                    data = "Did not provide a valid recipient or message\n"
+                    self.send_message(c, 2, "Not enough params")
                 else:
-                    sendAccount = str(data_list[1])
+                    user_to_send = str(data_list[1])
                     message = str(data_list[2])
-                    self.send_message()
+                    args = message.split(":")
+                    from_uuid = args[0]
+                    user_from = self.uuid_dict[from_uuid]
+
+                    success = self.send_or_queue_message(message, user_from, user_to_send)
+                    if success:
+                        self.send_message(c, 0, "")
+                    else:
+                        self.send_message(c, 1, "Recipient does not exist")
 
             elif opcode == "4": 
                 # fetch buffered messages, if any
@@ -95,5 +127,7 @@ class ChatServer:
             else:
                 data = "Invalid Opcode\n"
             
-            c.send(data.encode('ascii'))
         c.close()
+
+
+if __name__ == "__main__":

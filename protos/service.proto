@@ -15,12 +15,12 @@ message Chat {
     string message = 4;
 }
 
-message Response {
+message Outcome {
     int64 err_type = 1;
-    string msg = 2;
+    string err_msg = 2;
 }
 
 service ChatBot {
-    rpc send_chat (Chat) returns (Empty);
-    rpc receive_chat (User) returns (Chat); 
+    rpc server_send_chat (Chat) returns (Outcome);
+    rpc server_get_chat (User) returns (Chat); 
 }

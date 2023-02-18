@@ -12,18 +12,23 @@ class Server(pb2_grpc.ChatBotServicer):
     def __init__(self):
         self.chats = []
 
-    def get_chat(self, request_iterator, context):
-        lastindex = 0
-        while True:
-            while len(self.chats) > lastindex:
-                n = self.chats[last_message]
-                last_message += 1
-                yield n
+    def server_send_chat(self, request: pb2.Chat, context):
+        try:
+            user = request.username
+            message = request.message
+            print("[{}] {}".format(user, message))
+        except Exception as e:
+            return pb2.Outcome(err_type=1, err_msg=e)
+        return pb2.Outcome(err_type=0, err_msg="success")
     
-    def send_chat(self, request: pb2.Chat, context):
-        print("[{}] {}".format(request.username, request.message))
-        self.chats.append(request)
-        return pb2.Empty()
+    def server_get_chat(self, request, context):
+        # try:
+            # get messages from database (based on user id)
+        # except Exception as e:
+            # return []
+        #return messages
+        pass
+    
 
 if __name__ == '__main__':
     port = 11921

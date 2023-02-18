@@ -14,13 +14,13 @@ class ChatBotStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.send_chat = channel.unary_unary(
-                '/grpc.ChatBot/send_chat',
+        self.server_send_chat = channel.unary_unary(
+                '/grpc.ChatBot/server_send_chat',
                 request_serializer=protos_dot_service__pb2.Chat.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.Empty.FromString,
+                response_deserializer=protos_dot_service__pb2.Outcome.FromString,
                 )
-        self.receive_chat = channel.unary_unary(
-                '/grpc.ChatBot/receive_chat',
+        self.server_get_chat = channel.unary_unary(
+                '/grpc.ChatBot/server_get_chat',
                 request_serializer=protos_dot_service__pb2.User.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.Chat.FromString,
                 )
@@ -29,13 +29,13 @@ class ChatBotStub(object):
 class ChatBotServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def send_chat(self, request, context):
+    def server_send_chat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def receive_chat(self, request, context):
+    def server_get_chat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,13 +44,13 @@ class ChatBotServicer(object):
 
 def add_ChatBotServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'send_chat': grpc.unary_unary_rpc_method_handler(
-                    servicer.send_chat,
+            'server_send_chat': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_send_chat,
                     request_deserializer=protos_dot_service__pb2.Chat.FromString,
-                    response_serializer=protos_dot_service__pb2.Empty.SerializeToString,
+                    response_serializer=protos_dot_service__pb2.Outcome.SerializeToString,
             ),
-            'receive_chat': grpc.unary_unary_rpc_method_handler(
-                    servicer.receive_chat,
+            'server_get_chat': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_get_chat,
                     request_deserializer=protos_dot_service__pb2.User.FromString,
                     response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
             ),
@@ -65,7 +65,7 @@ class ChatBot(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def send_chat(request,
+    def server_send_chat(request,
             target,
             options=(),
             channel_credentials=None,
@@ -75,14 +75,14 @@ class ChatBot(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/send_chat',
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_send_chat',
             protos_dot_service__pb2.Chat.SerializeToString,
-            protos_dot_service__pb2.Empty.FromString,
+            protos_dot_service__pb2.Outcome.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def receive_chat(request,
+    def server_get_chat(request,
             target,
             options=(),
             channel_credentials=None,
@@ -92,7 +92,7 @@ class ChatBot(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/receive_chat',
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_get_chat',
             protos_dot_service__pb2.User.SerializeToString,
             protos_dot_service__pb2.Chat.FromString,
             options, channel_credentials,

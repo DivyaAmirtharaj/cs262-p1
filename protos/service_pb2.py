@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14protos/service.proto\x12\x04grpc\"\x07\n\x05\x45mpty\"8\n\x04User\x12\x0c\n\x04uuid\x18\x01 \x01(\x03\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\")\n\x04\x43hat\x12\x10\n\x08username\x18\x03 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\")\n\x08Response\x12\x10\n\x08\x65rr_type\x18\x01 \x01(\x03\x12\x0b\n\x03msg\x18\x02 \x01(\t2W\n\x07\x43hatBot\x12$\n\tsend_chat\x12\n.grpc.Chat\x1a\x0b.grpc.Empty\x12&\n\x0creceive_chat\x12\n.grpc.User\x1a\n.grpc.Chatb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14protos/service.proto\x12\x04grpc\"\x07\n\x05\x45mpty\"8\n\x04User\x12\x0c\n\x04uuid\x18\x01 \x01(\x03\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\")\n\x04\x43hat\x12\x10\n\x08username\x18\x03 \x01(\t\x12\x0f\n\x07message\x18\x04 \x01(\t\",\n\x07Outcome\x12\x10\n\x08\x65rr_type\x18\x01 \x01(\x03\x12\x0f\n\x07\x65rr_msg\x18\x02 \x01(\t2c\n\x07\x43hatBot\x12-\n\x10server_send_chat\x12\n.grpc.Chat\x1a\r.grpc.Outcome\x12)\n\x0fserver_get_chat\x12\n.grpc.User\x1a\n.grpc.Chatb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'protos.service_pb2', globals())
@@ -26,8 +26,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _USER._serialized_end=95
   _CHAT._serialized_start=97
   _CHAT._serialized_end=138
-  _RESPONSE._serialized_start=140
-  _RESPONSE._serialized_end=181
-  _CHATBOT._serialized_start=183
-  _CHATBOT._serialized_end=270
+  _OUTCOME._serialized_start=140
+  _OUTCOME._serialized_end=184
+  _CHATBOT._serialized_start=186
+  _CHATBOT._serialized_end=285
 # @@protoc_insertion_point(module_scope)

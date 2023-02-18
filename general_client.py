@@ -40,7 +40,7 @@ class ChatClient:
 
             if len(data) == 0:
                 # change this to a real error
-                print("Client Died")
+                print("Client died")
                 break
             else:
                 next_recv = sock.recv(n - total_bytes)
@@ -59,7 +59,7 @@ class ChatClient:
             if message_type == "C":
                 sys.stdout.write(received_message + "\n")
             elif message_type == "S":
-                sys.stdout.write(str(status) + ": " + received_message)
+                self.server_responses.put((status, received_message))
             else:
                 # make this an exception
                 print("bad message format")
@@ -70,12 +70,17 @@ class ChatClient:
         thread.start_new_thread(self.listener, ())
     
     def send_and_get_response(self, data):
-        s.send(data.encode('ascii'))
+        self.sock.send(data.encode('ascii'))
         status, response = self.get_server_response()
         return status, response
 
     def get_server_response(self):
-        # finish
+        try:
+            status, response = self.response_queue.get(block=True, timeout=3)
+            return status, response
+        except queue.Empty:
+            return 3, None
+
     
     def run_client(self):
         while True:
@@ -95,8 +100,47 @@ class ChatClient:
                     if len(data_list) < 3:
                         print("Incorrect parameters: correct form is 1|[username]|[pwd]")
                     else:
-                        
-                s.send(ans.encode('ascii'))
+                        username = args[1]
+                        status, response = self.send_and_get_response(ans)
+                        if status == 0:
+                            self.uuid = ord(response)
+                            self.username = username
+                            print("Created account " + username)
+                        else:
+                            print("Username already exists. Pick a different one.")
+                # logging in
+                elif opcode == "2":
+                    if len(data_list) < 3:
+                        print("Incorrect parameters: correct form is 2|[username]|[pwd]")
+                    else:
+                        status, response = self.send_and_get_response(ans)
+                        if status == 0:
+                            self.login = True
+                            print("Logged into account " + self.username)
+                        else:
+                            print("Incorrect username or password.")
+                # sending message
+                elif opcode == "3":
+                    if len(data_list) < 3:
+                        print("Incorrect parameters: correct form is 3|[user_to_send]|[message]")
+                    else:
+                        # add the uuid of this user so that it can be decoded by
+                        # the server and sent
+                        to_user = args[0]
+                        ans = "|".join([opcode, to_user, str(self.uuid) + ":" + args[1]])
+                        status, response = self.send_and_get_response(ans)
+                        if status == 0:
+                            print("Delivered message to " + to_user)
+                        else:
+                            print("Could not deliver to " + to_user + ". Check if this username exists")
+                elif opcode == "4":
+                    # fetch buffered messages
+                elif opcode == "5":
+                    # search by text wildcard
+                elif opcode == "6":
+                    # delete account
+                else:
+                    print("Invalid opcode. 1 = create account, 2 = login, 3 = send, 4 = fetch, 5 = search, 6 = delete")
                 continue
         # close the connection
         s.close()

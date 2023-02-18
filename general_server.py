@@ -34,9 +34,9 @@ class ChatServer:
         user_to_send_sock = user_sockets[user_to_send]
         if user_to_send in currentlyOnlineList:
             self.send_message(user_to_send_sock, "C", 0, message)
+        #else: finish queueing messages later
         
         return True
-        #else: finish queueing messages later
     
     def create_account(self, username, pwd):  
         hashedPwd = hash(pwd) 
@@ -47,9 +47,7 @@ class ChatServer:
             pwdHash = hash(accountPwd)
             self.accountName_table[accountName] = pwdHash
             self.user_sockets[accountName] = None
-            uuid = random.randint(0, 100)
-            print("New account: " + accountName)
-            
+            uuid = random.randint(0, 100)            
             return True, uuid
         
     def login(self, username, pwd):
@@ -77,56 +75,45 @@ class ChatServer:
             print("Opcode: " + str(opcode))
 
             if opcode == "1":
-                if len(data_list) < 3:
-                    self.send_message(c, 2, "Not enough params")
+                accountName = str(data_list[1])
+                accountPwd = str(data_list[2])
+                
+                success, uuid = self.create_account(accountName, accountPwd)
+                if success:
+                    self.uuid_dict[uuid] = accountName
+                    self.send_message(c, "S", 0, chr(uuid))
                 else:
-                    accountName = str(data_list[1])
-                    accountPwd = str(data_list[2])
-                    
-                    success, uuid = self.create_account(accountName, accountPwd)
-                    if success:
-                        self.uuid_dict[uuid] = accountName
-                        self.send_message(c, "S", 0, chr(uuid))
-                    else:
-                        self.send_message(c, "S", 1, "Failed account creation")
+                    self.send_message(c, "S", 1, "")
             elif opcode == "2":
-                if len(data_list) < 3:
-                    self.send_message(c, 2, "Not enough params")
-                else: 
-                    accountName = str(data_list[1])
-                    accountPwd = str(data_list[2])
-                    
-                    success = self.login(accountName, accountPwd)
-                    if success:
-                        self.send_message(c, "S", 0, "")
-                    else:
-                        self.send_message(c, "S", 1, "Failed login")
+                accountName = str(data_list[1])
+                accountPwd = str(data_list[2])
+                
+                success = self.login(accountName, accountPwd)
+                if success:
+                    self.send_message(c, "S", 0, "")
+                else:
+                    self.send_message(c, "S", 1, "")
 
             elif opcode == "3":
-                if len(data_list) < 3:
-                    self.send_message(c, "S", 2, "Not enough params")
-                else:
-                    user_to_send = str(data_list[1])
-                    message = str(data_list[2])
-                    args = message.split(":")
-                    # change this
-                    from_uuid = args[0]
-                    user_from = self.uuid_dict[from_uuid]
+                user_to_send = str(data_list[1])
+                message = str(data_list[2])
+                args = message.split(":")
+                # change this
+                from_uuid = args[0]
+                user_from = self.uuid_dict[from_uuid]
 
-                    success = self.send_or_queue_message(message, user_from, user_to_send)
-                    if success:
-                        self.send_message(c, "S", 0, "")
-                    else:
-                        self.send_message(c, "S", 1, "Recipient does not exist")
+                success = self.send_or_queue_message(message, user_from, user_to_send)
+                if success:
+                    self.send_message(c, "S", 0, "")
+                else:
+                    self.send_message(c, "S", 1, "")
 
             elif opcode == "4": 
                 # fetch buffered messages, if any
             elif opcode == "5":
                 # search by text wildcard
-            elif opcode == "6":
-                # delete account
             else:
-                data = "Invalid Opcode\n"
+                # delete account
             
         c.close()
 

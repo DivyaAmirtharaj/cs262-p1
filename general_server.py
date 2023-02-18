@@ -17,12 +17,12 @@ class ChatServer:
         self.uuid_dict = {}
         self.currentlyOnlineList = []
 
-    def send_message(self, sock, status, message):
+    def send_message(self, sock, message_type, status, message):
         message_len = len(message)
         if message_len > MAX_MSG_LEN:
             print("Message too long")
         
-        to_send = chr(status) + chr(message_len) + message
+        to_send = message_type + chr(status) + chr(message_len) + message
         sock.sendall(to_send)
     
     def send_response(self, sock, status, *args):
@@ -33,7 +33,7 @@ class ChatServer:
             return False
         user_to_send_sock = user_sockets[user_to_send]
         if user_to_send in currentlyOnlineList:
-            self.send_message(user_to_send_sock, 0, message)
+            self.send_message(user_to_send_sock, "C", 0, message)
         
         return True
         #else: finish queueing messages later
@@ -86,9 +86,9 @@ class ChatServer:
                     success, uuid = self.create_account(accountName, accountPwd)
                     if success:
                         self.uuid_dict[uuid] = accountName
-                        self.send_message(c, 0, chr(uuid))
+                        self.send_message(c, "S", 0, chr(uuid))
                     else:
-                        self.send_message(c, 1, "Failed account creation")
+                        self.send_message(c, "S", 1, "Failed account creation")
             elif opcode == "2":
                 if len(data_list) < 3:
                     self.send_message(c, 2, "Not enough params")
@@ -98,25 +98,26 @@ class ChatServer:
                     
                     success = self.login(accountName, accountPwd)
                     if success:
-                        self.send_message(c, 0, "")
+                        self.send_message(c, "S", 0, "")
                     else:
-                        self.send_message(c, 1, "Failed login")
+                        self.send_message(c, "S", 1, "Failed login")
 
             elif opcode == "3":
                 if len(data_list) < 3:
-                    self.send_message(c, 2, "Not enough params")
+                    self.send_message(c, "S", 2, "Not enough params")
                 else:
                     user_to_send = str(data_list[1])
                     message = str(data_list[2])
                     args = message.split(":")
+                    # change this
                     from_uuid = args[0]
                     user_from = self.uuid_dict[from_uuid]
 
                     success = self.send_or_queue_message(message, user_from, user_to_send)
                     if success:
-                        self.send_message(c, 0, "")
+                        self.send_message(c, "S", 0, "")
                     else:
-                        self.send_message(c, 1, "Recipient does not exist")
+                        self.send_message(c, "S", 1, "Recipient does not exist")
 
             elif opcode == "4": 
                 # fetch buffered messages, if any

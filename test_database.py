@@ -38,7 +38,8 @@ def call():
         print("Failed to get uuid")
     
     try:
-        db.get_message(send_id, receive_id)
+        history = db.get_message(send_id, receive_id)
+        print(history)
     except:
         print("Failed to get message history")
 

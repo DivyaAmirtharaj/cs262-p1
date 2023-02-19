@@ -75,6 +75,7 @@ class Database(object):
         if rows is None:
             print("No message history")
             raise Exception
+        return rows
 
     @thread_db
     def get_username(self, con, cur, uuid):
@@ -90,11 +91,10 @@ class Database(object):
         # returns the uuid for a certain user
         cur.execute("""
             SELECT uuid FROM users WHERE username = ?
-        """, username)
+        """, [username])
         val = cur.fetchone()
         if val is None:
             raise Exception("No user found")
-        print(val[0])
         return val[0]
 
     @thread_db

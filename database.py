@@ -67,6 +67,7 @@ class Database(object):
                 SELECT msgid, send_id, receive_id, message 
                 FROM messages
                 WHERE (send_id = ?) AND (receive_id = ?)
+                ORDER BY msgid ASC
             """, [send_id, receive_id])
             rows = cur.fetchall()
         except Exception as e:

@@ -32,8 +32,11 @@ class Client:
         # query the message history from the database
         pass
 
-    def create_user(self, username):
-        pass
+    def client_create_account(self):
+        acc = pb2.User(username=self.username)
+        new_account = self.stub.server_create_account(acc)
+        print(pb2.User(new_account.uuid, new_account.username))
+        return pb2.User(new_account.uuid, new_account.username)
         
 
 if __name__ == '__main__':
@@ -43,6 +46,7 @@ if __name__ == '__main__':
         username = input()
     while True:
         c = Client(username) 
+        c.client_create_account()
         c.client_send_message()
 
 # c = Client("divya")

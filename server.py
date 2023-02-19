@@ -31,10 +31,11 @@ class Server(pb2_grpc.ChatBotServicer):
         #return messages
         pass
 
-    def server_create_user(self, request, context):
+    def server_create_account(self, request, context):
         username = request.username
-        
-    
+        self.database.add_users(username)
+        return pb2.User(uuid=uuid, username=username)
+
 
 if __name__ == '__main__':
     port = 11921

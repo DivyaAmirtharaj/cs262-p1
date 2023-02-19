@@ -1,5 +1,4 @@
 import sqlite3
-import sys
 
 def thread_db(fn):
     def set_up(self, *args, **kwargs):
@@ -9,8 +8,6 @@ def thread_db(fn):
         con.close()
         return thread_cur
     return set_up
-
-
 
 class Database(object):
     def __init__(self) -> None:
@@ -74,6 +71,7 @@ class Database(object):
             SELECT uuid FROM users WHERE username = ?
         """, username)
         val = cur.fetchone()
+        print(val)
         if val is None:
             raise Exception("No user found")
         return val[0]

@@ -24,6 +24,11 @@ class ChatBotStub(object):
                 request_serializer=protos_dot_service__pb2.User.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.Chat.FromString,
                 )
+        self.server_create_account = channel.unary_unary(
+                '/grpc.ChatBot/server_create_account',
+                request_serializer=protos_dot_service__pb2.User.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.User.FromString,
+                )
 
 
 class ChatBotServicer(object):
@@ -41,6 +46,12 @@ class ChatBotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def server_create_account(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatBotServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -53,6 +64,11 @@ def add_ChatBotServicer_to_server(servicer, server):
                     servicer.server_get_chat,
                     request_deserializer=protos_dot_service__pb2.User.FromString,
                     response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
+            ),
+            'server_create_account': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_create_account,
+                    request_deserializer=protos_dot_service__pb2.User.FromString,
+                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -95,5 +111,22 @@ class ChatBot(object):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_get_chat',
             protos_dot_service__pb2.User.SerializeToString,
             protos_dot_service__pb2.Chat.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_create_account(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_create_account',
+            protos_dot_service__pb2.User.SerializeToString,
+            protos_dot_service__pb2.User.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

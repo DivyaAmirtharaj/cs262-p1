@@ -23,4 +23,5 @@ message Outcome {
 service ChatBot {
     rpc server_send_chat (Chat) returns (Outcome);
     rpc server_get_chat (User) returns (Chat); 
+    rpc server_create_account (User) returns (User);
 }

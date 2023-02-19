@@ -60,20 +60,6 @@ class Database(object):
         con.commit()
 
     @thread_db
-    def get_uuid(self, con, cur, username):
-        # returns the uuid for a certain user
-        try:
-            cur.execute("""
-                SELECT uuid FROM users WHERE (username = ?)
-            """, [username])
-        except Exception as e:
-            print(e)
-        val = cur.fetchone()
-        if val is None:
-            raise Exception("No user found")
-        return val[0]
-    
-    @thread_db
     def get_message(self, con, cur, send_id, receive_id):
         # given a receiver_id, and the sender_id get the message history between the two users
         try:
@@ -98,6 +84,13 @@ class Database(object):
             """, [uuid])
         except Exception as e:
             print(e)
+    
+    @thread_db
+    def get_uuid(self, con, cur, username):
+        # returns the uuid for a certain user
+        cur.execute("""
+            SELECT uuid FROM users WHERE username = ?
+        """, username)
         val = cur.fetchone()
         if val is None:
             raise Exception("No user found")

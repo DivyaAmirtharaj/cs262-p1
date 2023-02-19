@@ -14,11 +14,11 @@ class Server(pb2_grpc.ChatBotServicer):
 
     def server_send_chat(self, request: pb2.Chat, context):
         try:
-            user = request.username
+            user = "testing"
             message = request.message
             print("[{}] {}".format(user, message))
             #get send_id, get to_id
-            self.database.add_message(send_id, to_id, message)
+            #self.database.add_message(send_id, to_id, message)
         except Exception as e:
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")
@@ -30,6 +30,10 @@ class Server(pb2_grpc.ChatBotServicer):
             # return []
         #return messages
         pass
+
+    def server_create_user(self, request, context):
+        username = request.username
+        
     
 
 if __name__ == '__main__':

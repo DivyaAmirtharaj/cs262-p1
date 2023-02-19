@@ -58,7 +58,7 @@ class Database(object):
                 (msgid, send_id, to_id, message)
                 VALUES
                 (?, ?, ?, ?)
-        """,(latest+1, send_id, receive_id, message))
+        """,[latest+1, send_id, receive_id, message])
 
         con.commit()
     
@@ -68,9 +68,15 @@ class Database(object):
         pass
 
     @thread_db
-    def get_uuid(self, con, cur, username):
-        # given a username, get the associated uuid
-        pass
+    def get_uuid(self, cur, username):
+        # returns the uuid for a certain user
+        cur.execute("""
+            SELECT uuid FROM users WHERE username = ?
+        """, username)
+        val = cur.fetchone()
+        if val is None:
+            raise Exception("No user found")
+        return val[0]
     
     @thread_db
     def get_usernames(self, con, cur, pattern):
@@ -79,5 +85,19 @@ class Database(object):
 
     @thread_db
     def add_users(self, con, cur, username):
-        # given a new username, create a uuid and insert into the table
-        pass
+        cur.execute("""
+            SELECT uuid FROM users ORDER BY uuid DESC LIMIT 1
+        """)
+        latest = cur.fetchone()
+        if latest is None:
+            latest = 0
+        else:
+            latest = latest[0]
+
+        # add a new user to the database with a unique uuid
+        cur.execute("""
+            INSERT INTO users (uuid, username)
+                VALUES (?, ?)
+        """, [latest + 1, username])
+
+        con.commit()

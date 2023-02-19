@@ -27,7 +27,7 @@ class Database(object):
             CREATE TABLE IF NOT EXISTS messages (
                 msgid integer PRIMARY KEY,
                 send_id integer,
-                to_id integer,
+                receive_id integer,
                 message text
             );
         """)
@@ -36,6 +36,7 @@ class Database(object):
     @thread_db
     def add_message(self, con, cur, send_id, receive_id, message):
         # insert messages into database for a sender and a receiver
+        print(message)
         if len(message) > 256:
             raise Exception("Messages must be less than 256 characters")
         
@@ -49,33 +50,60 @@ class Database(object):
         else:
             # identify the latest message id (most recent message)
             latest = latest[0]
-        
-        cur.execute("""
-            INSERT INTO messages 
-                (msgid, send_id, to_id, message)
-                VALUES
-                (?, ?, ?, ?)
-        """,[latest+1, send_id, receive_id, message])
-
+        try:
+            cur.execute("""
+                INSERT INTO messages (msgid, send_id, receive_id, message)
+                    VALUES (?, ?, ?, ?)
+            """, [latest + 1, send_id, receive_id, message])
+        except Exception as e:
+            print(e)
         con.commit()
-    
-    @thread_db
-    def get_message(self, con, cur, send_id, receive_id):
-        # given a receiver_id, and the sender_id get the message history between the two users
-        pass
 
     @thread_db
-    def get_uuid(self, cur, username):
+    def get_uuid(self, con, cur, username):
         # returns the uuid for a certain user
-        cur.execute("""
-            SELECT uuid FROM users WHERE username = ?
-        """, username)
+        try:
+            cur.execute("""
+                SELECT uuid FROM users WHERE (username = ?)
+            """, [username])
+        except Exception as e:
+            print(e)
         val = cur.fetchone()
-        print(val)
         if val is None:
             raise Exception("No user found")
         return val[0]
     
+    @thread_db
+    def get_message(self, con, cur, send_id, receive_id):
+        # given a receiver_id, and the sender_id get the message history between the two users
+        try:
+            cur.execute("""
+                SELECT msgid, send_id, receive_id, message 
+                FROM messages
+                WHERE (send_id = ?) AND (receive_id = ?)
+            """, [send_id, receive_id])
+            rows = cur.fetchall()
+        except Exception as e:
+            print(e)
+        
+        if rows is None:
+            print("No message history")
+            raise Exception
+
+    @thread_db
+    def get_username(self, con, cur, uuid):
+        try:
+            cur.execute("""
+                SELECT username FROM users WHERE (uuid = ?)
+            """, [uuid])
+        except Exception as e:
+            print(e)
+        val = cur.fetchone()
+        if val is None:
+            raise Exception("No user found")
+        print(val[0])
+        return val[0]
+
     @thread_db
     def get_usernames(self, con, cur, pattern):
         # given some pattern, get all the usernames that contain it
@@ -98,4 +126,10 @@ class Database(object):
                 VALUES (?, ?)
         """, [latest + 1, username])
 
+        con.commit()
+    
+    @thread_db
+    def delete_table(self, con, cur):
+        cur.execute("DROP table IF EXISTS messages")
+        cur.execute("DROP table IF EXISTS users")
         con.commit()

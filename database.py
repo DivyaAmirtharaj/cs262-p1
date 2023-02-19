@@ -65,7 +65,7 @@ class Database(object):
         pass
 
     @thread_db
-    def get_uuid(self, cur, username):
+    def get_uuid(self, con, cur, username):
         # returns the uuid for a certain user
         cur.execute("""
             SELECT uuid FROM users WHERE username = ?

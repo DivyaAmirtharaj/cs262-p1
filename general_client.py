@@ -23,14 +23,13 @@ class ChatClient:
         self.server_responses = queue.Queue()
 
     def recv_from_server(self, sock):
-        print("receiving")
         header = self.get_k_bytes(sock, NUM_BYTES_IN_HEADER)
         
         status, message_len, message_type = header[0], header[1], header[2]
 
         received_message = self.get_k_bytes(sock, ord(message_len))
         status = ord(status)
-        print("Status is " + str(status))
+        print("Status of most recent operation is " + str(status))
 
 
         return message_type, status, received_message
@@ -40,9 +39,7 @@ class ChatClient:
         received_message = ""
 
         while total_bytes < k:
-            print(total_bytes)
             data = sock.recv(1, socket.MSG_PEEK).decode('UTF-8')
-            print(data)
             if len(data) == 0:
                 # change this to a real error
                 print("Client died")
@@ -85,7 +82,6 @@ class ChatClient:
         except queue.Empty:
             print("empty")
             return 3, None
-
     
     def run_client(self):
         while True:
@@ -122,6 +118,8 @@ class ChatClient:
                         if status == 0:
                             if not self.username:
                                 self.username = args[1]
+                            if not self.uuid:
+                                self.uuid = ord(response)
                             self.login = True
                             print("Logged into account")
                         else:
@@ -130,6 +128,8 @@ class ChatClient:
                 elif opcode == "3":
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 3|[user_to_send]|[message]")
+                    elif not self.login:
+                        print("Must be logged in to perform this action")
                     else:
                         # add the uuid of this user so that it can be decoded by
                         # the server and sent

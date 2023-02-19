@@ -1,6 +1,7 @@
 import socket
 import random
 import re
+from database import Database
 
 # import thread module
 from _thread import *
@@ -18,15 +19,14 @@ class ChatServer:
         self.accountName_table = {}
         self.uuid_dict = {}
         self.currentlyOnlineList = []
+        self.db = Database()
+        self.db.create_table()
 
     def send_message(self, sock, message_type, status, message):
-        print("sending")
         message_len = len(message)
         if message_len > MAX_MSG_LEN:
             print("Message too long")
-        
-        print("message len: " + str(chr(message_len)))
-        print("status: " + str(chr(status)))
+            return False
         
         to_send = chr(status) + chr(message_len)
         to_send += message_type + message
@@ -49,28 +49,38 @@ class ChatServer:
         return True
     
     def create_account(self, username, pwd):  
-        hashedPwd = hash(pwd) 
-        if username in self.accountName_table:
+        # if username in self.accountName_table:
+        #     return False, -1
+        # else:
+        #     # hashed for security
+        pwdHash = hash(pwd)
+        self.user_sockets[username] = None
+        try:
+            self.db.add_users(username)
+        except Exception as e:
+            print("couldn't add")
+            print(e)
             return False, -1
-        else:
-            # hashed for security
-            pwdHash = hash(pwd)
-            self.accountName_table[username] = pwdHash
-            self.user_sockets[username] = None
-            uuid = random.randint(0, 100)            
-            return True, uuid
+        try:
+            uuid = self.db.get_uuid(username)
+        except Exception as e:
+            print("no uuid")
+            print(e)
+            return False, -1
+        return True, uuid
         
     def login(self, username, pwd, c):
         if username not in self.accountName_table:
             print("Invalid account name")
-            return False
+            return False, -1
         elif hash(pwd) != self.accountName_table[username]:
             print("Invalid password")
-            return False
+            return False, -1
         else:
             self.user_sockets[username] = c
             self.currentlyOnlineList.append(username)
-            return True
+            uuid = list(self.uuid_dict.keys())[list(self.uuid_dict.values()).index(username)]
+            return True, uuid
     
     def get_by_wildcard(self, wildcard):
         regex = re.compile(wildcard)
@@ -101,9 +111,9 @@ class ChatServer:
                 accountName = str(data_list[1])
                 accountPwd = str(data_list[2])
                 
-                success = self.login(accountName, accountPwd, c)
+                success, uuid = self.login(accountName, accountPwd, c)
                 if success:
-                    self.send_message(c, "S", 0, "")
+                    self.send_message(c, "S", 0, chr(uuid))
                 else:
                     self.send_message(c, "S", 1, "")
 
@@ -114,7 +124,6 @@ class ChatServer:
                 # change this
                 from_uuid = int(args[0])
                 user_from = self.uuid_dict[from_uuid]
-                print(user_from)
 
                 success = self.send_or_queue_message(args[1], user_from, user_to_send)
                 if success:

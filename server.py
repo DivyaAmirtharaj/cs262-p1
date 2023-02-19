@@ -5,18 +5,20 @@ import time
 
 import protos.service_pb2_grpc as pb2_grpc
 import protos.service_pb2 as pb2
-
+from database import Database
 
 class Server(pb2_grpc.ChatBotServicer):
 
     def __init__(self):
-        self.chats = []
+        self.database = Database()
 
     def server_send_chat(self, request: pb2.Chat, context):
         try:
             user = request.username
             message = request.message
             print("[{}] {}".format(user, message))
+            #get send_id, get to_id
+            self.database.add_message(send_id, to_id, message)
         except Exception as e:
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")

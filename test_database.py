@@ -10,7 +10,7 @@ def create_add():
         print("Failed to create tables")
 
     try:
-        db.add_users("divya", "password", 1)
+        db.add_users("divya", "password", 0)
         print("Success, added user to database!")
     except Exception as e:
         print("Failed to add user")
@@ -20,6 +20,26 @@ def create_add():
         print("Success, added message to database!")
     except Exception as e:
         print("Failed to add message")
+    
+    assert(db.get_username(1) == "divya")
+    assert(db.get_uuid("divya") == 1)
+
+def login():
+    try:
+        db.update_login("divya", "passwor", 1)
+        print("Success, logged in this user!")
+    except Exception as e:
+        print(e)
+        print("Failed (correctly) to log in user")
+    try:
+        db.update_login("divya", "password", 1)
+        print("Success, logged in this user!")
+    except Exception as e:
+        print(e)
+        print("Failed to log in user")
+
+    assert(db.is_logged_in("divya") == True)
+
 
 def clean_tables():
     try:
@@ -44,6 +64,7 @@ def call():
         print("Failed to get message history")
 
 
-#clean_tables()
+clean_tables()
 create_add()
+login()
 #call()

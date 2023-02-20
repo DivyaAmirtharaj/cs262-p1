@@ -65,7 +65,7 @@ def call():
 
 def wildcard():
     try:
-        usernames = db.get_usernames("divya")
+        usernames = db.get_usernames("d[a-z]*")
         print(usernames)
     except:
         print("Did not find usernames")

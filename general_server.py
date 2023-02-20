@@ -18,9 +18,6 @@ class ChatServer:
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.user_sockets = {}
-        self.accountName_table = {}
-        self.uuid_dict = {}
-        self.currentlyOnlineList = []
         self.db = Database()
         self.db.delete_table()
         self.db.create_table()
@@ -46,9 +43,6 @@ class ChatServer:
         assert(len(to_send) == 3 + len(message))
         sock.sendall(to_send.encode('UTF-8'))
         return True
-    
-    def send_response(self, sock, status, *args):
-        self.send_message(sock, status, ":".join(args))
 
     def send_or_queue_message(self, message, user_from, user_to_send):
         cat_message = user_from + ":" + message
@@ -103,6 +97,9 @@ class ChatServer:
             raise Exception("Client died")
         data = c.recv(1024)
         return data
+    
+    def pack_arr_as_str(self, arr):
+        return "\n".join([str(item) for item in arr])
 
     def threaded(self, c):
         while True:
@@ -121,36 +118,46 @@ class ChatServer:
                 print("No message received")
                 break
             print(data_str + "\n")
+
             data_list = data_str.split("|")
             opcode = data_list[0]
+
             print("Opcode: " + str(opcode))
 
+            # checks of argument validity have been done on the client side,
+            # so args can be unpacked without fear of error
+            # if-elif-else statement that takes care of each possible opcode
             if opcode == "1":
-                accountName = str(data_list[1])
-                accountPwd = str(data_list[2])
+                # create account
+                username = str(data_list[1])
+                pwd = str(data_list[2])
                 
-                success, uuid = self.create_account(accountName, accountPwd)
+                success, uuid = self.create_account(username, pwd)
+
                 if success:
                     self.send_message(c, "S", 0, chr(uuid))
                 else:
                     self.send_message(c, "S", 1, "")
+            
             elif opcode == "2":
-                accountName = str(data_list[1])
-                accountPwd = str(data_list[2])
+                # login to account
+                username = str(data_list[1])
+                pwd = str(data_list[2])
                 
-                success, uuid_or_status = self.login(accountName, accountPwd, c)
+                success, uuid_or_status = self.login(username, pwd, c)
+
                 if success:
                     self.send_message(c, "S", 0, chr(uuid_or_status))
                 else:
                     self.send_message(c, "S", uuid_or_status, "")
-
+            
             elif opcode == "3":
+                # send message from client A to client B
                 user_to_send = str(data_list[1])
                 message = str(data_list[2])
-                args = message.split(":")
-                from_uuid = int(args[0])
-                text_message = args[1]
-                print(from_uuid)
+                message_args = message.split(":")
+                from_uuid = int(message_args[0])
+                text_message = message_args[1]
 
                 try:
                     user_from = self.db.get_username(from_uuid)
@@ -160,23 +167,50 @@ class ChatServer:
                     continue
 
                 success = self.send_or_queue_message(text_message, user_from, user_to_send)
+
                 if success:
                     self.send_message(c, "S", 0, "")
                 else:
                     self.send_message(c, "S", 1, "")
 
             elif opcode == "4":
+                # get history
                 username = str(data_list[1])
-                all_history = self.db.get_all_history(username)
-                all_history_message = '\n'.join([str(msg) for msg in all_history])
-                success = self.send_or_queue_message(all_history_message, "", username)
+                try:
+                    all_history = self.db.get_all_history(username)
+                except Exception as e:
+                    print("No history")
+                    self.send_message(c, "S", 1, "")
+                    continue
+                
+                all_history_message = self.pack_arr_as_str(all_history)
+                success = self.send_message(c, "C", 0, all_history_message)
+
                 if success:
                     self.send_message(c, "S", 0, "")
                 else:
-                    self.send_message(c, "S", 1, "")
+                    self.send_message(c, "S", 2, "")
+            
             elif opcode == "5":
-                # search by text wildcard
-                print("implement")
+                # get matching users
+                wildcard = str(data_list[1])
+                username = str(data_list[2])
+
+                try:
+                    matching_users = self.db.get_usernames(wildcard)
+                except Exception as e:
+                    print("No matching users")
+                    self.send_message(c, "S", 1, "")
+                    continue
+                
+                matching_users_message = self.pack_arr_as_str(matching_users)
+                success = self.send_message(c, "C", 0, matching_users_message)
+                
+                if success:
+                    self.send_message(c, "S", 0, "")
+                else:
+                    self.send_message(c, "S", 2, "")
+
             else:
                 # delete account
                 print("implement")

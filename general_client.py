@@ -30,8 +30,6 @@ class ChatClient:
 
         received_message = self.get_k_bytes(sock, ord(message_len))
         status = ord(status)
-        print("Status of most recent operation is " + str(status))
-
 
         return message_type, status, received_message
     
@@ -161,15 +159,19 @@ class ChatClient:
                         status, response = self.send_and_get_response(ans + "|" + self.username)
                         if status == 0:
                             print("Retrieved all history for " + self.username)
+                        elif status == 1:
+                            print("No unread messages")
                         else:
                             print("Unable to retrieve history")
                 elif opcode == "5":
                     if len(args) < 2:
                         print("Incorrect parameters: correct form is 5|[regex_wildcard]")
                     else:
-                        status, response = self.send_and_get_response(ans)
+                        status, response = self.send_and_get_response(ans + "|" + self.username)
                         if status == 0:
                             print("Found all matching users")
+                        elif status == 1:
+                            print("No matching users")
                         else:
                             print("Unable to retrieve matching users")
                 elif opcode == "6":

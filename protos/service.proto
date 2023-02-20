@@ -7,6 +7,8 @@ message Empty {}
 message User {
     int64 uuid = 1;
     string username = 2;
+    string password = 3;
+    int64 login_status = 4;
 }
 
 message Chat {

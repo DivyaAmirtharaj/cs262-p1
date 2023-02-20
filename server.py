@@ -10,19 +10,21 @@ class Server(pb2_grpc.ChatBotServicer):
     def __init__(self):
         self.database = Database()
         self.username = ""
+        self.login_status = 0
 
     # User management
     def server_create_account(self, request, context):
+        # add check here to make sure it's a unique username
         self.username = request.username
-        self.database.add_users(self.username)
+        password = request.password
+        self.login_status = request.login_status
+        self.database.add_users(self.username, password, self.login_status)
         uuid = self.database.get_uuid(self.username)
-        return pb2.User(uuid=uuid, username=self.username)
+        return pb2.User(uuid=uuid, username=self.username, password=password, login_status=self.login_status)
     
-    def server_login(self, request, context):
-        self.username = request.username
-        self.database.add_users(self.username)
-        uuid = self.database.get_uuid(self.username)
-        return pb2.User(uuid=uuid, username=self.username)
+    def server_login(self, request, context, username, password):
+        # update login status if successful sign in
+        pass
 
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):

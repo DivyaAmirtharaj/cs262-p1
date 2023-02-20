@@ -63,8 +63,24 @@ def call():
     except:
         print("Failed to get message history")
 
+def wildcard():
+    try:
+        usernames = db.get_usernames("divya")
+        print(usernames)
+    except:
+        print("Did not find usernames")
+    
+    try:
+        usernames = db.get_usernames("l[a-z]*")
+        print(usernames)
+    except:
+        print("(Correctly) did not find usernames")
+    
+    
+
 
 clean_tables()
 create_add()
 login()
-#call()
+call()
+wildcard()

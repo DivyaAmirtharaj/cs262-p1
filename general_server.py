@@ -9,6 +9,8 @@ import threading
 
 MAX_MSG_LEN = 280
 p_lock = threading.Lock()
+LOGGED_IN = 1
+LOGGED_OUT = 0
 
 class ChatServer:
     def __init__(self, host, port):
@@ -20,7 +22,17 @@ class ChatServer:
         self.uuid_dict = {}
         self.currentlyOnlineList = []
         self.db = Database()
+        self.db.delete_table()
         self.db.create_table()
+    
+    def check_user_in_db(self, username):
+        try: 
+            uuid_exists = self.db.get_uuid(username)
+        except Exception as e:
+            print("Username is invalid")
+            print(e)
+            return False
+        return True
 
     def send_message(self, sock, message_type, status, message):
         message_len = len(message)
@@ -33,61 +45,80 @@ class ChatServer:
         print(to_send)
         assert(len(to_send) == 3 + len(message))
         sock.sendall(to_send.encode('UTF-8'))
+        return True
     
     def send_response(self, sock, status, *args):
         self.send_message(sock, status, ":".join(args))
 
     def send_or_queue_message(self, message, user_from, user_to_send):
         cat_message = user_from + ":" + message
-        if user_to_send not in self.accountName_table:
-            return False
-        user_to_send_sock = self.user_sockets[user_to_send]
-        if user_to_send in self.currentlyOnlineList:
-            self.send_message(user_to_send_sock, "C", 0, cat_message)
-        #else: finish queueing messages later
+        if self.check_user_in_db(user_to_send):
+            user_to_send_sock = self.user_sockets[user_to_send]
+        else:
+            return False, 1
+
+        if self.db.is_logged_in(user_to_send):
+            result = self.send_message(user_to_send_sock, "C", 0, cat_message)
+            if not result:
+                return False, 2
+        else:
+            self.db.add_message(user_from, user_to_send, cat_message)
         
-        return True
+        return True, 0
     
     def create_account(self, username, pwd):  
-        # if username in self.accountName_table:
-        #     return False, -1
-        # else:
-        #     # hashed for security
         pwdHash = hash(pwd)
+        print(pwdHash)
         self.user_sockets[username] = None
         try:
-            self.db.add_users(username)
+            self.db.add_users(username, pwdHash, LOGGED_OUT)
         except Exception as e:
-            print("couldn't add")
             print(e)
+            print("repeat user")
             return False, -1
-        try:
-            uuid = self.db.get_uuid(username)
-        except Exception as e:
-            print("no uuid")
-            print(e)
-            return False, -1
+        uuid = self.db.get_uuid(username)
         return True, uuid
         
     def login(self, username, pwd, c):
-        if username not in self.accountName_table:
-            print("Invalid account name")
-            return False, -1
-        elif hash(pwd) != self.accountName_table[username]:
-            print("Invalid password")
-            return False, -1
-        else:
+        user_exists = self.check_user_in_db(username)
+        if not user_exists:
+            return False, 1
+        elif self.db.is_logged_in(username):
+            return False, 2
+        pwdHash = hash(pwd)
+        print(pwdHash)
+        try:
             self.user_sockets[username] = c
-            self.currentlyOnlineList.append(username)
-            uuid = list(self.uuid_dict.keys())[list(self.uuid_dict.values()).index(username)]
+            self.db.update_login(username, pwdHash, LOGGED_IN)
+            uuid = self.db.get_uuid(username)
             return True, uuid
+        except Exception as e:
+            print(e)
+            return False, 3
+    
+    def recv_from_socket(self, c):
+        data = c.recv(1, socket.MSG_PEEK)
+
+        if len(data) == 0:
+            raise Exception("Client died")
+        data = c.recv(1024)
+        return data
     
     def get_by_wildcard(self, wildcard):
         regex = re.compile(wildcard)
 
     def threaded(self, c):
         while True:
-            data = c.recv(1024)
+            try:
+                data = self.recv_from_socket(c)
+            except Exception as e:
+                print(e)
+                print("Client died")
+                lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
+                self.db.force_logout(lost_user)
+                self.user_sockets[lost_user] = None
+                break
+
             data_str = data.decode('UTF-8')
             if not data:
                 print("No message received")
@@ -103,7 +134,6 @@ class ChatServer:
                 
                 success, uuid = self.create_account(accountName, accountPwd)
                 if success:
-                    self.uuid_dict[uuid] = accountName
                     self.send_message(c, "S", 0, chr(uuid))
                 else:
                     self.send_message(c, "S", 1, "")
@@ -111,29 +141,42 @@ class ChatServer:
                 accountName = str(data_list[1])
                 accountPwd = str(data_list[2])
                 
-                success, uuid = self.login(accountName, accountPwd, c)
+                success, uuid_or_status = self.login(accountName, accountPwd, c)
                 if success:
-                    self.send_message(c, "S", 0, chr(uuid))
+                    self.send_message(c, "S", 0, chr(uuid_or_status))
                 else:
-                    self.send_message(c, "S", 1, "")
+                    self.send_message(c, "S", uuid_or_status, "")
 
             elif opcode == "3":
                 user_to_send = str(data_list[1])
                 message = str(data_list[2])
                 args = message.split(":")
-                # change this
                 from_uuid = int(args[0])
-                user_from = self.uuid_dict[from_uuid]
+                text_message = args[1]
+                print(from_uuid)
 
-                success = self.send_or_queue_message(args[1], user_from, user_to_send)
+                try:
+                    user_from = self.db.get_username(from_uuid)
+                except Exception as e:
+                    print("User has been deleted")
+                    self.send_message(c, "S", 2, "")
+                    continue
+
+                success = self.send_or_queue_message(text_message, user_from, user_to_send)
                 if success:
                     self.send_message(c, "S", 0, "")
                 else:
                     self.send_message(c, "S", 1, "")
 
-            elif opcode == "4": 
-                # fetch buffered messages, if any
-                print("implement")
+            elif opcode == "4":
+                username = str(data_list[1])
+                all_history = self.db.get_all_history(username)
+                all_history_message = '\n'.join([str(msg) for msg in all_history])
+                success = self.send_or_queue_message(all_history_message, "", username)
+                if success:
+                    self.send_message(c, "S", 0, "")
+                else:
+                    self.send_message(c, "S", 1, "")
             elif opcode == "5":
                 # search by text wildcard
                 print("implement")

@@ -63,3 +63,33 @@ CASES TO COVER
 - make sure that general send/receive works
 - make sure that offline send/receive works (command 4 is essentially a fetch command)
 - message size (no empty messages, no messages too long)
+
+02/19/2023
+- things to note in notebook
+    - client side failure
+        - if client crashes, consider them logged out and any future messages queued
+        - force logout function in database — helps when a client crashes. logs out with only the username, only ever called by server when client crashes
+    - login flow
+        - block multiple logins of the same user (in the same or different clients)
+        - specific status codes for wrong user/pass
+    - new database operations
+        - force_logout (see above)
+        - update_login — for logging in a user
+        - is_logged_in — checks login status (mostly for queueing messages)
+        - get_all_history — get queued messages
+    - new server operations (non-grpc)
+        - check_user_in_db: used to verify message sending to valid users, utilizes get_uuid by catching its exception
+
+- things to fix
+    - fix message format (for kat)
+    - send history as a response, not a message (server and client side)
+- things to implement
+    - server-side text wildcard (for kat)
+    - account deletion
+    - modifying get_all_history to clear messages for receive_id whenever called successfully
+        - can either be done in method or through a clear_history method
+    - write more database tests
+    - write normal tests
+- things to potentially improve
+    - defining exception classes for common errors
+

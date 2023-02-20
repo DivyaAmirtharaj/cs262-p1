@@ -1,9 +1,11 @@
 import sqlite3
+import re
 
 def thread_db(fn):
     def set_up(self, *args, **kwargs):
         con = sqlite3.connect("chat.db")
         cur = con.cursor()
+        con.create_function('regexp', 2, lambda x, y: 1 if re.search(x,y) else 0)
         thread_cur = fn(self, con, cur, *args, **kwargs)
         con.close()
         return thread_cur
@@ -75,7 +77,26 @@ class Database(object):
         except Exception as e:
             print(e)
         
-        if rows is None:
+        if rows is None or len(rows) == 0:
+            print("No message history")
+            raise Exception
+        return rows
+    
+    @thread_db
+    def get_all_history(self, con, cur, receive_id):
+        # given a receiver_id, and the sender_id get the message history between the two users
+        try:
+            cur.execute("""
+                SELECT msgid, send_id, receive_id, message 
+                FROM messages
+                WHERE (receive_id = ?)
+                ORDER BY msgid ASC
+            """, [receive_id])
+            rows = cur.fetchall()
+        except Exception as e:
+            print(e)
+        
+        if rows is None or len(rows) == 0:
             print("No message history")
             raise Exception
         return rows
@@ -88,6 +109,11 @@ class Database(object):
             """, [uuid])
         except Exception as e:
             print(e)
+        
+        user = cur.fetchone()
+        if user is None:
+            raise Exception("No user found for this uuid")
+        return user[0]
     
     @thread_db
     def get_uuid(self, con, cur, username):
@@ -97,13 +123,23 @@ class Database(object):
         """, [username])
         val = cur.fetchone()
         if val is None:
-            raise Exception("No user found")
+            raise Exception("No user found for this username")
         return val[0]
 
     @thread_db
     def get_usernames(self, con, cur, pattern):
         # given some pattern, get all the usernames that contain it
-        pass
+        try:
+            cur.execute("""
+                SELECT username FROM users WHERE username REGEXP ?
+            """, [pattern])
+        except Exception as e:
+            print(e)
+        rows = cur.fetchall()
+        if rows is None or len(rows) == 0:
+            raise Exception("No users found for this query")
+        usernames = [row[0] for row in rows]
+        return usernames
 
     @thread_db
     def add_users(self, con, cur, username, password, login_status):
@@ -122,6 +158,40 @@ class Database(object):
                 VALUES (?, ?, ?, ?)
         """, [latest + 1, username, password, login_status])
 
+        con.commit()
+    
+    @thread_db
+    def is_logged_in(self, con, cur, username):
+        try:
+            cur.execute("""SELECT login_status FROM users WHERE username = ? """, [username])
+        except Exception as e:
+            print(e)
+        
+        status = cur.fetchone()
+        return status[0]
+    
+    @thread_db
+    def update_login(self, con, cur, username, password, new_login_status):
+        cur.execute("""
+                SELECT username FROM users WHERE username = ? AND password = ?
+            """, [username, password])
+        user = cur.fetchone()
+        if user is None:
+            raise Exception("Wrong password")
+        try: 
+            cur.execute("""
+                    UPDATE users SET login_status = ? WHERE username = ? AND password = ?
+                """, [new_login_status, username, password])
+        except Exception as e:
+            print(e)
+        con.commit()
+
+    @thread_db
+    def force_logout(self, con, cur, username):
+        # useful when a client has died
+        cur.execute("""
+                    UPDATE users SET login_status = 0 WHERE username = ?
+                """, [username])
         con.commit()
     
     @thread_db

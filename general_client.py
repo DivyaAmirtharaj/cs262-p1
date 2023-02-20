@@ -24,13 +24,12 @@ class ChatClient:
 
     def recv_from_server(self, sock):
         header = self.get_k_bytes(sock, NUM_BYTES_IN_HEADER)
+
         
         status, message_len, message_type = header[0], header[1], header[2]
 
         received_message = self.get_k_bytes(sock, ord(message_len))
         status = ord(status)
-        print("Status of most recent operation is " + str(status))
-
 
         return message_type, status, received_message
     
@@ -41,8 +40,7 @@ class ChatClient:
         while total_bytes < k:
             data = sock.recv(1, socket.MSG_PEEK).decode('UTF-8')
             if len(data) == 0:
-                # change this to a real error
-                print("Client died")
+                raise Exception("client died")
                 break
             else:
                 next_recv = sock.recv(k - total_bytes).decode('UTF-8')
@@ -56,7 +54,11 @@ class ChatClient:
 
     def listener(self):
         while True: 
-            message_type, status, received_message = self.recv_from_server(self.socket)
+            try:
+                message_type, status, received_message = self.recv_from_server(self.socket)
+            except Exception as e:
+                print("You've been disconnected")
+                exit()
             # insert an exception for client death
             if message_type == "C":
                 sys.stdout.write(received_message + "\n")
@@ -81,7 +83,7 @@ class ChatClient:
             return status, response
         except queue.Empty:
             print("empty")
-            return 3, None
+            return 4, None
     
     def run_client(self):
         while True:
@@ -122,8 +124,14 @@ class ChatClient:
                                 self.uuid = ord(response)
                             self.login = True
                             print("Logged into account")
+                        elif status == 1:
+                            print("Incorrect username.")
+                        elif status == 2:
+                            print("Already logged in.")
+                        elif status == 3:
+                            print("Incorrect password.")
                         else:
-                            print("Incorrect username or password.")
+                            print("Unable to login")
                 # sending message
                 elif opcode == "3":
                     if len(args) < 3:
@@ -138,14 +146,34 @@ class ChatClient:
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
                             print("Delivered message to " + to_user)
-                        else:
+                        elif status == 1:
                             print("Could not deliver to " + to_user + ". Check if this username exists")
+                        elif status == 2:
+                            print("Message was too long. Keep messages under 280 characters.")
+                        else:
+                            print("Unable to send message")
                 elif opcode == "4":
-                    # fetch buffered messages
-                    print("implement")
+                    if not self.login:
+                        print("Must be logged in to perform this action")
+                    else:
+                        status, response = self.send_and_get_response(ans + "|" + self.username)
+                        if status == 0:
+                            print("Retrieved all history for " + self.username)
+                        elif status == 1:
+                            print("No unread messages")
+                        else:
+                            print("Unable to retrieve history")
                 elif opcode == "5":
-                    # search by text wildcard
-                    print("implement")
+                    if len(args) < 2:
+                        print("Incorrect parameters: correct form is 5|[regex_wildcard]")
+                    else:
+                        status, response = self.send_and_get_response(ans + "|" + self.username)
+                        if status == 0:
+                            print("Found all matching users")
+                        elif status == 1:
+                            print("No matching users")
+                        else:
+                            print("Unable to retrieve matching users")
                 elif opcode == "6":
                     print("implement")
                     # delete account

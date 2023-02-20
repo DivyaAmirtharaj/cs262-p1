@@ -29,11 +29,10 @@ class Server(pb2_grpc.ChatBotServicer):
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
         try:
-            user = "testing"
+            receive_id = request.receive_id
+            send_id = request.send_id
             message = request.message
-            print("[{}] {}".format(user, message))
-            #get send_id, get to_id
-            #self.database.add_message(send_id, to_id, message)
+            self.database.add_message(send_id, receive_id, message)
         except Exception as e:
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")

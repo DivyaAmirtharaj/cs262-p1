@@ -88,6 +88,11 @@ class Database(object):
             """, [uuid])
         except Exception as e:
             print(e)
+        
+        user = cur.fetchone()
+        if user is None:
+            raise Exception("No user found for this uuid")
+        return user[0]
     
     @thread_db
     def get_uuid(self, con, cur, username):
@@ -97,7 +102,7 @@ class Database(object):
         """, [username])
         val = cur.fetchone()
         if val is None:
-            raise Exception("No user found")
+            raise Exception("No user found for this username")
         return val[0]
 
     @thread_db
@@ -125,13 +130,30 @@ class Database(object):
         con.commit()
     
     @thread_db
-    def update_login(self, con, cur, username, password, login_status):
+    def is_logged_in(self, con, cur, username):
         try:
-            cur.execute("""
-                UPDATE users SET login_status = 1 WHERE username = ? AND password = ? and 
-            """, [username, password])
+            cur.execute("""SELECT login_status FROM users WHERE username = ? """, [username])
         except Exception as e:
             print(e)
+        
+        status = cur.fetchone()
+        return status[0]
+    
+    @thread_db
+    def update_login(self, con, cur, username, password, new_login_status):
+        cur.execute("""
+                SELECT username FROM users WHERE username = ? AND password = ?
+            """, [username, password])
+        user = cur.fetchone()
+        if user is None:
+            raise Exception("Wrong password")
+        try: 
+            cur.execute("""
+                    UPDATE users SET login_status = ? WHERE username = ? AND password = ?
+                """, [new_login_status, username, password])
+        except Exception as e:
+            print(e)
+        con.commit()
     
     @thread_db
     def delete_table(self, con, cur):

@@ -77,10 +77,13 @@ class Database(object):
         except Exception as e:
             print(e)
         
+        history = []
         if rows is None or len(rows) == 0:
             print("No message history")
             raise Exception
-        return rows
+        for row in rows:
+            history.append({'send_id': row[1], 'receive_id': row[2], 'message': row[3]})
+        return history
     
     @thread_db
     def get_all_history(self, con, cur, receive_id):

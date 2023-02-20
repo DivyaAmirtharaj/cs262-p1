@@ -11,6 +11,8 @@ class Server(pb2_grpc.ChatBotServicer):
         self.database = Database()
         self.username = ""
         self.login_status = 0
+        self.database.delete_table()
+        self.database.create_table()
 
     # User management
     def server_create_account(self, request, context):
@@ -38,13 +40,10 @@ class Server(pb2_grpc.ChatBotServicer):
         return pb2.Outcome(err_type=0, err_msg="success")
     
     def server_get_chat(self, request, context):
-        # try:
-            # get messages from database (based on user id)
-        # except Exception as e:
-            # return []
-        #return messages
-        pass
-
+        send_id = request.send_id
+        receive_id = request.receive_id
+        messages = self.database.get_message(send_id, receive_id)
+        return messages
 
 
 if __name__ == '__main__':

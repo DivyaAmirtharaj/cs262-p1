@@ -12,10 +12,11 @@ class Client:
     def __init__(self):
         self.username = None
         self.login_status = None
+        self.receive_id = None
+        self.database = Database()
         channel = grpc.insecure_channel('localhost:11912')
         self.stub = pb2_grpc.ChatBotStub(channel)
-        threading.Thread(target=self.client_get_message, daemon=True).start()
-        self.database = Database()
+#threading.Thread(target=self.client_get_message(), daemon=True).start()
 
     # User management
     def client_create_account(self, password):
@@ -24,21 +25,27 @@ class Client:
         return new_account
 
     # Chatting functionality
-    def client_send_message(self, receive_id):
+    def client_send_message(self):
         msg = sys.stdin.readline()
         send_uuid = self.database.get_uuid(self.username)
-        receive_uuid = self.database.get_uuid(receive_id)
+        receive_uuid = self.database.get_uuid(self.receive_id)
         if msg != "":
             n = pb2.Chat()
             n.send_id = send_uuid
             n.receive_id = receive_uuid
             n.message = msg
             print("[{}] {}".format(self.username, n.message))
-            self.stub.server_send_chat(n)
+        return self.stub.server_send_chat(n)
 
     def client_get_message(self):
-        # query the message history from the database
-        pass
+        send_uuid = self.database.get_uuid(self.username)
+        receive_uuid = self.database.get_uuid(self.receive_id)
+        req = pb2.Chat()
+        req.send_id = send_uuid
+        req.receive_id = receive_uuid
+        req.message = ""
+        print(req)
+        print(self.stub.server_get_chat(req))
     
     def run(self):
         # login/ create new account
@@ -60,8 +67,10 @@ class Client:
 
         # send message
         print("Welcome {}!  Who would you like to message?".format(self.username))
-        to_username = input()
-        self.client_send_message(to_username)
+        self.receive_id = input()
+        while True:
+            self.client_send_message()
+            self.client_get_message()
 
 if __name__ == '__main__':
     c = Client()

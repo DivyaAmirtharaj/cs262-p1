@@ -103,9 +103,6 @@ class ChatServer:
             raise Exception("Client died")
         data = c.recv(1024)
         return data
-    
-    def get_by_wildcard(self, wildcard):
-        regex = re.compile(wildcard)
 
     def threaded(self, c):
         while True:

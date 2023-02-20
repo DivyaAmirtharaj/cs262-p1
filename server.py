@@ -1,8 +1,6 @@
 from concurrent import futures
-
 import grpc
 import time
-
 import protos.service_pb2_grpc as pb2_grpc
 import protos.service_pb2 as pb2
 from database import Database
@@ -11,7 +9,22 @@ class Server(pb2_grpc.ChatBotServicer):
 
     def __init__(self):
         self.database = Database()
+        self.username = ""
 
+    # User management
+    def server_create_account(self, request, context):
+        self.username = request.username
+        self.database.add_users(self.username)
+        uuid = self.database.get_uuid(self.username)
+        return pb2.User(uuid=uuid, username=self.username)
+    
+    def server_login(self, request, context):
+        self.username = request.username
+        self.database.add_users(self.username)
+        uuid = self.database.get_uuid(self.username)
+        return pb2.User(uuid=uuid, username=self.username)
+
+    # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
         try:
             user = "testing"
@@ -31,10 +44,6 @@ class Server(pb2_grpc.ChatBotServicer):
         #return messages
         pass
 
-    def server_create_account(self, request, context):
-        username = request.username
-        self.database.add_users(username)
-        return pb2.User(uuid=uuid, username=username)
 
 
 if __name__ == '__main__':

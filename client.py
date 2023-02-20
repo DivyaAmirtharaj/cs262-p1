@@ -1,15 +1,14 @@
+import sys
 import threading
 import grpc
 import protos.service_pb2_grpc as pb2_grpc
 import protos.service_pb2 as pb2
-import sys
 from database import Database
 
 address = "localhost"
 port = 11912
 
 class Client:
-
     def __init__(self, user = str):
         self.username = user
         channel = grpc.insecure_channel('localhost:11912')
@@ -17,6 +16,14 @@ class Client:
         threading.Thread(target=self.client_get_message, daemon=True).start()
         self.database = Database()
 
+    # User management
+    def client_create_account(self):
+        acc = pb2.User(username=self.username)
+        new_account = self.stub.server_create_account(acc)
+        print(pb2.User(new_account.uuid, new_account.username))
+        return pb2.User(new_account.uuid, new_account.username)
+
+    # Chatting functionality
     def client_send_message(self):
         msg = sys.stdin.readline()
         uuid = 3
@@ -32,13 +39,6 @@ class Client:
         # query the message history from the database
         pass
 
-    def client_create_account(self):
-        acc = pb2.User(username=self.username)
-        new_account = self.stub.server_create_account(acc)
-        print(pb2.User(new_account.uuid, new_account.username))
-        return pb2.User(new_account.uuid, new_account.username)
-        
-
 if __name__ == '__main__':
     username = None
     while username is None:
@@ -48,7 +48,3 @@ if __name__ == '__main__':
         c = Client(username) 
         c.client_create_account()
         c.client_send_message()
-
-# c = Client("divya")
-#c.send_message()
-# time.sleep(64 * 64 * 100)

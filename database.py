@@ -19,7 +19,9 @@ class Database(object):
         cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 uuid integer PRIMARY KEY,
-                username text UNIQUE
+                username text UNIQUE,
+                password text,
+                login_status integer
             );
         """)
         # create a messages table
@@ -104,7 +106,7 @@ class Database(object):
         pass
 
     @thread_db
-    def add_users(self, con, cur, username):
+    def add_users(self, con, cur, username, password, login_status):
         cur.execute("""
             SELECT uuid FROM users ORDER BY uuid DESC LIMIT 1
         """)
@@ -116,9 +118,9 @@ class Database(object):
 
         # add a new user to the database with a unique uuid
         cur.execute("""
-            INSERT INTO users (uuid, username)
-                VALUES (?, ?)
-        """, [latest + 1, username])
+            INSERT INTO users (uuid, username, password, login_status)
+                VALUES (?, ?, ?, ?)
+        """, [latest + 1, username, password, login_status])
 
         con.commit()
     

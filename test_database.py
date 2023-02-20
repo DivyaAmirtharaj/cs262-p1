@@ -10,7 +10,7 @@ def create_add():
         print("Failed to create tables")
 
     try:
-        db.add_users("divya")
+        db.add_users("divya", "password", 1)
         print("Success, added user to database!")
     except Exception as e:
         print("Failed to add user")
@@ -45,5 +45,5 @@ def call():
 
 
 #clean_tables()
-#create_add()
-call()
+create_add()
+#call()

@@ -125,6 +125,15 @@ class Database(object):
         con.commit()
     
     @thread_db
+    def update_login(self, con, cur, username, password, login_status):
+        try:
+            cur.execute("""
+                UPDATE users SET login_status = 1 WHERE username = ? AND password = ? and 
+            """, [username, password])
+        except Exception as e:
+            print(e)
+    
+    @thread_db
     def delete_table(self, con, cur):
         cur.execute("DROP table IF EXISTS messages")
         cur.execute("DROP table IF EXISTS users")

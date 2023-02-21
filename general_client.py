@@ -9,7 +9,12 @@ import queue
 NUM_BYTES_IN_HEADER = 3
 
 class ChatClient:
-
+    """
+    Implements a chat client/user that connects to the server using a socket. 
+    Clients possess an associated username and UUID (which is retrieved through
+    creating an account with the server). Clients submit requests to the server
+    and message other clients through the command line.
+    """
     def __init__(self, host, port):
         self.host = host
         self.port = port
@@ -19,30 +24,48 @@ class ChatClient:
         self.login = False
         # helps to keep track of info that the server sends the
         # client that is necessary to set up the client, like
-        # uuid and login status
+        # uuid and login status (which may be sent through server responses)
+        # also contains general server confirmation responses
         self.server_responses = queue.Queue()
 
     def recv_from_server(self, sock):
-        header = self.get_k_bytes(sock, NUM_BYTES_IN_HEADER)
+        """
+        Receives a message formatted according to our wire protocol: a message
+        should contain a 3-byte header:
+            1st byte: status code (from server)
+            2nd byte: message length encoded as a unicode char
+            3rd byte: single char 'C' or 'S' that indicates if 
+            the received message is a message from another user or a server response
+        """
 
-        
+        # receive the header first
+        header = self.get_k_bytes(sock, NUM_BYTES_IN_HEADER)
         status, message_len, message_type = header[0], header[1], header[2]
 
+        # convert message length back to integer
         received_message = self.get_k_bytes(sock, ord(message_len))
         status = ord(status)
 
         return message_type, status, received_message
     
     def get_k_bytes(self, sock, k):
+        """
+        Receives k bytes from the server. Used to receive the (fixed-length) header
+        and (known-length) messages from the server. Blocks until finished reading
+        """
         total_bytes = 0
         received_message = ""
 
         while total_bytes < k:
+            # Try to read one byte in order to see if the client has died
+            # Peek prevents this singular byte from actually being retrieved
             data = sock.recv(1, socket.MSG_PEEK).decode('UTF-8')
             if len(data) == 0:
                 raise Exception("client died")
                 break
             else:
+                # if everything is fine, continue reading until the 
+                # total number of requested bytes has been read
                 next_recv = sock.recv(k - total_bytes).decode('UTF-8')
                 total_bytes += len(next_recv)
                 received_message += next_recv
@@ -50,7 +73,6 @@ class ChatClient:
         assert(total_bytes == k)
 
         return received_message
-
 
     def listener(self):
         while True: 

@@ -158,6 +158,11 @@ class ChatServer:
         return data
     
     def check_history_for_deleted_sender(self, history):
+        """
+        Checks a list of chat history messages retrieved from the database
+        and replaces the sender with 'deleted' if the sender no longer exists
+        in the database. Returns the amended history.
+        """
         checked_history = []
         for item in history:
             if "send_id" not in item or "message" not in item:

@@ -8,7 +8,6 @@ from _thread import *
 import threading
 
 MAX_MSG_LEN = 280
-p_lock = threading.Lock()
 LOGGED_IN = 1
 LOGGED_OUT = 0
 HEADER_LENGTH = 3

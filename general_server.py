@@ -11,9 +11,19 @@ MAX_MSG_LEN = 280
 p_lock = threading.Lock()
 LOGGED_IN = 1
 LOGGED_OUT = 0
+HEADER_LENGTH = 3
 
 class ChatServer:
+    """
+    Implements the functionalities of a server for a command-line chat app.
+    Receives client connections and responds to their requests.
+    """
     def __init__(self, host, port):
+        """
+        Initializes the server host, port, and socket. Also initializes
+        storage for client sockets and a database for storing user information
+        and message history. Clears the database if it already has values in it.
+        """
         self.host = host
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,6 +33,10 @@ class ChatServer:
         self.db.create_table()
     
     def check_user_in_db(self, username):
+        """
+        Checks if a username is in the database by trying to retrieve
+        its uuid. If nothing is returned, catch exception and return.
+        """
         try: 
             uuid_exists = self.db.get_uuid(username)
         except Exception as e:
@@ -32,48 +46,81 @@ class ChatServer:
         return True
 
     def send_message(self, sock, message_type, status, message):
+        """
+        Sends a message to a client socket. Concatenates operation
+        status, message length, and message type (chat or server response)
+        and sends it to the user.
+        """
         message_len = len(message)
         if message_len > MAX_MSG_LEN:
+            # note that messages are in the form [sending_user]:[message]
+            # so the number of chars in the [sending_user] username 
+            # is considered when finding message length
             print("Message too long")
             return False
         
         to_send = chr(status) + chr(message_len)
         to_send += message_type + message
         print(to_send)
-        assert(len(to_send) == 3 + len(message))
+        assert(len(to_send) == HEADER_LENGTH + len(message))
         sock.sendall(to_send.encode('UTF-8'))
         return True
 
     def send_or_queue_message(self, message, user_from, user_to_send):
+        """
+        Sends specifically chat messages to a client socket. Concatenates
+        the username of the sender with the message, so that the receiving
+        user knows who the message is from. Only sends the message over the
+        socket if the receiving user is logged in.
+        """
         cat_message = user_from + ":" + message
         if self.check_user_in_db(user_to_send):
             user_to_send_sock = self.user_sockets[user_to_send]
         else:
             return False, 1
 
+        # check login status of receiving user
         if self.db.is_logged_in(user_to_send):
             result = self.send_message(user_to_send_sock, "C", 0, cat_message)
             if not result:
                 return False, 2
         else:
+            # if not logged in, add message the receiving users queue
             self.db.add_message(user_from, user_to_send, cat_message)
         
         return True, 0
     
     def create_account(self, username, pwd):  
+        """
+        Attempts to create an account for client with the given username and password.
+        Attempts to add this username and password to the database. If
+        an exception is raised, the username already exists. Returns the
+        UUID (created by the database) of this new user and the status
+        of account creation.
+        """
         pwdHash = hash(pwd)
-        print(pwdHash)
-        self.user_sockets[username] = None
         try:
             self.db.add_users(username, pwdHash, LOGGED_OUT)
         except Exception as e:
             print(e)
-            print("repeat user")
+            print("Repeat user")
             return False, -1
+        
+        # this operation will succeed because the user
+        # has been added to the database
         uuid = self.db.get_uuid(username)
+        # add this new user as a key in the socket dictionary
+        self.user_sockets[username] = None
         return True, uuid
         
     def login(self, username, pwd, c):
+        """
+        Attempts login with the given username and password. Checks if the
+        user is already in the database, is already logged in, or if 
+        the password is incorrect and returns a status code accordingly.
+        If the operation succeeds, store the socket for this user and
+        return its UUID to be sent to the client.
+        """
         user_exists = self.check_user_in_db(username)
         if not user_exists:
             return False, 1
@@ -91,23 +138,47 @@ class ChatServer:
             return False, 3
     
     def recv_from_socket(self, c):
+        """
+        Used by the server to constantly receive from a particular
+        client socket. Peeks at a single byte of data first in order
+        to determine if the client is still online. If it is, receives
+        1024 bytes from the client.
+        """
+
+        # make sure client is still online
         data = c.recv(1, socket.MSG_PEEK)
 
         if len(data) == 0:
+            # if not, raise an exception to be caught
+            # in the main serving loop
             raise Exception("Client died")
         data = c.recv(1024)
         return data
     
     def pack_arr_as_str(self, arr):
+        """
+        Takes a list as items and formats them into a string.
+        Used for getting message history and searching users.
+        """
         return "\n".join([str(item) for item in arr])
 
     def threaded(self, c):
+        """
+        Method called by each thread for each client, which receives
+        from that client specifically. Constantly receives from the client
+        until it dies/is disconnected. Processes the arguments from any client 
+        input and sends responses to the client based on whether the requested
+        operations finished succesfully.
+        """
         while True:
             try:
                 data = self.recv_from_socket(c)
             except Exception as e:
                 print(e)
                 print("Client died")
+
+                # if the client dies, end this loop, log the user out,
+                # and reset the socket for the user.
                 lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
                 self.db.force_logout(lost_user)
                 self.user_sockets[lost_user] = None
@@ -119,6 +190,9 @@ class ChatServer:
                 break
             print(data_str + "\n")
 
+            # Requests from a client are sent in the form of [opcode]|[arg1]|[arg2]...
+            # The format of these requests has already been verified on the client side
+            # (e.g. clients cannot send invalid request forms)
             data_list = data_str.split("|")
             opcode = data_list[0]
 
@@ -134,6 +208,9 @@ class ChatServer:
                 
                 success, uuid = self.create_account(username, pwd)
 
+                # if successful, return successful response
+                # and UUID of new user so it can be stored
+                # by the client
                 if success:
                     self.send_message(c, "S", 0, chr(uuid))
                 else:
@@ -146,6 +223,9 @@ class ChatServer:
                 
                 success, uuid_or_status = self.login(username, pwd, c)
 
+                # if successful, return succesful response and UUID
+                # of this user, in case the client is logging back
+                # in to a preexisting account.
                 if success:
                     self.send_message(c, "S", 0, chr(uuid_or_status))
                 else:
@@ -155,35 +235,42 @@ class ChatServer:
                 # send message from client A to client B
                 user_to_send = str(data_list[1])
                 message = str(data_list[2])
+
+                # assume that messages from the client are packaged in the form
+                # [uuid of sending user]:[text message].
                 message_args = message.split(":")
                 from_uuid = int(message_args[0])
                 text_message = message_args[1]
 
+                # retrieve the username of the sending user
                 try:
                     user_from = self.db.get_username(from_uuid)
                 except Exception as e:
+                    # if it does not exist, indicate that this user
+                    # has been deleted
                     print("User has been deleted")
-                    self.send_message(c, "S", 2, "")
-                    continue
+                    user_from = "Deleted"
 
-                success = self.send_or_queue_message(text_message, user_from, user_to_send)
+                success, status = self.send_or_queue_message(text_message, user_from, user_to_send)
 
-                if success:
-                    self.send_message(c, "S", 0, "")
-                else:
-                    self.send_message(c, "S", 1, "")
+                self.send_message(c, "S", status, "")
 
             elif opcode == "4":
                 # get history
                 username = str(data_list[1])
+
                 try:
                     all_history = self.db.get_all_history(username)
                 except Exception as e:
+                    # If there is no new message history,
+                    # indicate this to the client
                     print("No history")
                     self.send_message(c, "S", 1, "")
                     continue
                 
                 all_history_message = self.pack_arr_as_str(all_history)
+
+                # send history as a chat message
                 success = self.send_message(c, "C", 0, all_history_message)
 
                 if success:
@@ -199,11 +286,14 @@ class ChatServer:
                 try:
                     matching_users = self.db.get_usernames(wildcard)
                 except Exception as e:
+                    # if no such users found, indicate
+                    # this to the user
                     print("No matching users")
                     self.send_message(c, "S", 1, "")
                     continue
                 
                 matching_users_message = self.pack_arr_as_str(matching_users)
+                # send the matching users as a message
                 success = self.send_message(c, "C", 0, matching_users_message)
                 
                 if success:
@@ -218,6 +308,12 @@ class ChatServer:
         c.close()
 
     def start_server(self):
+        """
+        Starts the server by binding its socket to the initialized host/port
+        and having it listen. Continuously accept client connections and 
+        begin a new thread for receiving from each client whenever a client
+        connects.
+        """
         self.socket.bind((self.host, self.port))
         self.socket.listen(5)
         print("Socket is listening")

@@ -5,46 +5,70 @@ import protos.service_pb2_grpc as pb2_grpc
 import protos.service_pb2 as pb2
 from database import Database
 
+def list_to_protobuf(tpe):
+    def wrap(f):
+        def wrapped(self, request, context, *args, **kwargs):
+            ret = f(self, request, context, *args, **kwargs)
+            assert isinstance(ret, list)
+            for r in ret:
+                yield tpe(**r)
+        wrapped.__name__ = f.__name__
+        return wrapped
+    return wrap
+
 class Server(pb2_grpc.ChatBotServicer):
 
     def __init__(self):
         self.database = Database()
-        self.username = ""
-        self.login_status = 0
         self.database.delete_table()
         self.database.create_table()
 
     # User management
+
+    # Creates a new user from the username and password provided
     def server_create_account(self, request, context):
-        # add check here to make sure it's a unique username
-        self.username = request.username
+        username = request.username
         password = request.password
-        self.login_status = request.login_status
-        self.database.add_users(self.username, password, self.login_status)
-        uuid = self.database.get_uuid(self.username)
-        return pb2.User(uuid=uuid, username=self.username, password=password, login_status=self.login_status)
-    
-    def server_login(self, request, context, username, password):
-        # update login status if successful sign in
-        pass
+        login_status = 1
+        try:
+            self.database.add_users(username, password, login_status)
+        except Exception as e:
+            print(e)
+            return pb2.User(uuid=0, username="")
+        return pb2.User(username=username) 
+
+    # Changes login_status if password and username are correct
+    def server_login(self, request, context):
+        username = request.username
+        password = request.password
+        new_login_status = 1
+        try:
+            self.database.update_login(username, password, new_login_status)
+        except Exception as e:
+            print(e)
+            return pb2.User(uuid=0, username="")
+        return pb2.User(username=username) 
 
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
+        send_id = self.database.get_uuid(request.send_name)
+        receive_id = self.database.get_uuid(request.receive_name)
+        message = request.message
         try:
-            receive_id = request.receive_id
-            send_id = request.send_id
-            message = request.message
             self.database.add_message(send_id, receive_id, message)
         except Exception as e:
+            print(e)
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")
     
+    @list_to_protobuf(pb2.Chat)
     def server_get_chat(self, request, context):
-        send_id = request.send_id
-        receive_id = request.receive_id
-        messages = self.database.get_message(send_id, receive_id)
-        return messages
-
+        receive_id = self.database.get_uuid(request.username)
+        try:
+            messages = self.database.get_message(receive_id)
+        except Exception as e:
+            return iter([])
+        return iter(messages)
 
 if __name__ == '__main__':
     port = 11921

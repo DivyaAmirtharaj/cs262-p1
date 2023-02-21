@@ -21,11 +21,16 @@ class ChatBotStub(object):
                 )
         self.server_get_chat = channel.unary_stream(
                 '/grpc.ChatBot/server_get_chat',
-                request_serializer=protos_dot_service__pb2.Chat.SerializeToString,
+                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.Chat.FromString,
                 )
         self.server_create_account = channel.unary_unary(
                 '/grpc.ChatBot/server_create_account',
+                request_serializer=protos_dot_service__pb2.User.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.User.FromString,
+                )
+        self.server_login = channel.unary_unary(
+                '/grpc.ChatBot/server_login',
                 request_serializer=protos_dot_service__pb2.User.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.User.FromString,
                 )
@@ -52,6 +57,12 @@ class ChatBotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def server_login(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatBotServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -62,11 +73,16 @@ def add_ChatBotServicer_to_server(servicer, server):
             ),
             'server_get_chat': grpc.unary_stream_rpc_method_handler(
                     servicer.server_get_chat,
-                    request_deserializer=protos_dot_service__pb2.Chat.FromString,
+                    request_deserializer=protos_dot_service__pb2.Id.FromString,
                     response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
             ),
             'server_create_account': grpc.unary_unary_rpc_method_handler(
                     servicer.server_create_account,
+                    request_deserializer=protos_dot_service__pb2.User.FromString,
+                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
+            ),
+            'server_login': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_login,
                     request_deserializer=protos_dot_service__pb2.User.FromString,
                     response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
@@ -109,7 +125,7 @@ class ChatBot(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/grpc.ChatBot/server_get_chat',
-            protos_dot_service__pb2.Chat.SerializeToString,
+            protos_dot_service__pb2.Id.SerializeToString,
             protos_dot_service__pb2.Chat.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -126,6 +142,23 @@ class ChatBot(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_create_account',
+            protos_dot_service__pb2.User.SerializeToString,
+            protos_dot_service__pb2.User.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_login(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_login',
             protos_dot_service__pb2.User.SerializeToString,
             protos_dot_service__pb2.User.FromString,
             options, channel_credentials,

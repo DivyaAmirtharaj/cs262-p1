@@ -64,25 +64,31 @@ class Database(object):
         con.commit()
 
     @thread_db
-    def get_message(self, con, cur, send_id, receive_id):
+    def get_message(self, con, cur, receive_id):
         # given a receiver_id, and the sender_id get the message history between the two users
-        try:
-            cur.execute("""
-                SELECT msgid, send_id, receive_id, message 
-                FROM messages
-                WHERE (send_id = ?) AND (receive_id = ?)
-                ORDER BY msgid ASC
-            """, [send_id, receive_id])
-            rows = cur.fetchall()
-        except Exception as e:
-            print(e)
-        
+        cur.execute("""
+            SELECT msgid, send_id, receive_id, message 
+            FROM messages
+            WHERE (receive_id = ?)
+            ORDER BY msgid ASC
+        """, [receive_id])
+        rows = cur.fetchall()
+        if rows is None:
+            raise Exception("No message history")
         history = []
         if rows is None or len(rows) == 0:
-            print("No message history")
-            raise Exception
+            raise Exception("No message history")
+
         for row in rows:
-            history.append({'send_id': row[1], 'receive_id': row[2], 'message': row[3]})
+            cur.execute("SELECT username FROM users WHERE (uuid = ?)", [row[1]])
+            send_name = cur.fetchone()
+            if send_name is None:
+                raise Exception("Sender doesn't exist")
+            cur.execute("SELECT username FROM users WHERE (uuid = ?)", [row[2]])
+            receive_name = cur.fetchone()
+            if receive_name is None:
+                raise Exception("Receiver doesn't exist")
+            history.append({"send_name": send_name, "receive_name": receive_name, "message": row[3]})
         return history
     
     @thread_db
@@ -103,7 +109,7 @@ class Database(object):
             print("No message history")
             raise Exception
         return rows
-
+    
     @thread_db
     def get_username(self, con, cur, uuid):
         try:

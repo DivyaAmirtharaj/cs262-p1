@@ -12,9 +12,13 @@ message User {
 }
 
 message Chat {
-    int64 send_id = 1;
-    int64 receive_id = 2;
+    string send_name = 1;
+    string receive_name = 2;
     string message = 3;
+}
+
+message Id {
+    string username = 1;
 }
 
 message Outcome {
@@ -24,6 +28,7 @@ message Outcome {
 
 service ChatBot {
     rpc server_send_chat (Chat) returns (Outcome);
-    rpc server_get_chat (Chat) returns (stream Chat); 
+    rpc server_get_chat (Id) returns (stream Chat); 
     rpc server_create_account (User) returns (User);
+    rpc server_login (User) returns (User);
 }

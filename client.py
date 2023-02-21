@@ -3,61 +3,53 @@ import threading
 import grpc
 import protos.service_pb2_grpc as pb2_grpc
 import protos.service_pb2 as pb2
-from database import Database
+import time
 
 address = "localhost"
 port = 11912
 
 class Client:
     def __init__(self):
-        self.username = None
-        self.login_status = None
-        self.receive_id = None
-        self.database = Database()
         channel = grpc.insecure_channel('localhost:11912')
         self.stub = pb2_grpc.ChatBotStub(channel)
-#threading.Thread(target=self.client_get_message(), daemon=True).start()
+    
+    def client_get_message(self, username):
+        n = pb2.Id()
+        n.username = username
+        messages = self.stub.server_get_chat(n)
+        for m in messages:
+            print("R[{}] {}".format(m.send_name, m.message))  # debugging statement
+        return [pb2.Chat(m.send_name, m.receive_name, m.msg) for m in messages]
 
     # User management
-    def client_create_account(self, password):
-        acc = pb2.User(username=self.username, password=password, login_status=self.login_status)
+    def client_create_account(self, username, password):
+        acc = pb2.User(username=username, password=password)
         new_account = self.stub.server_create_account(acc)
+        if new_account.username == "":
+            print("That username is taken, please choose another one")
         return new_account
 
     # Chatting functionality
-    def client_send_message(self):
+    def client_send_message(self, username, receive_name):
+        threading.Thread(target=self.client_get_message(username),
+                                 daemon=True).start()
         msg = sys.stdin.readline()
-        send_uuid = self.database.get_uuid(self.username)
-        receive_uuid = self.database.get_uuid(self.receive_id)
         if msg != "":
-            n = pb2.Chat()
-            n.send_id = send_uuid
-            n.receive_id = receive_uuid
-            n.message = msg
-            print("[{}] {}".format(self.username, n.message))
-        return self.stub.server_send_chat(n)
+            m = pb2.Chat()
+            m.send_name = username
+            m.receive_name = receive_name
+            m.message = msg
+            print("[{}] {}".format(username, m.message))
+        return self.stub.server_send_chat(m)
 
-    def client_get_message(self):
-        send_uuid = self.database.get_uuid(self.username)
-        receive_uuid = self.database.get_uuid(self.receive_id)
-        req = pb2.Chat()
-        req.send_id = send_uuid
-        req.receive_id = receive_uuid
-        req.message = ""
-        print(req)
-        print(self.stub.server_get_chat(req))
-    
     def run(self):
         # login/ create new account
-        print("Are you a new user, y/n? \n")
-        account_status = input()
+        account_status = input("Are you a new user, y/n? \n")
         if account_status == "y":
             print("Please create a new username and password! \n")
-            print("Username: ")
-            self.username = input()
-            print("Password: ")
-            password = input()
-            self.client_create_account(password)
+            username = input("Username: ")
+            password = input("Password: ")
+            self.client_create_account(username, password)
         elif account_status == "n":
             # login function
             pass
@@ -66,11 +58,14 @@ class Client:
             pass
 
         # send message
-        print("Welcome {}!  Who would you like to message?".format(self.username))
-        self.receive_id = input()
+        try:
+            threading.Thread(target=self.client_get_message(username), daemon=True).start()
+        except Exception as e:
+            print(e)
+        print("Welcome {}!  Who would you like to message?".format(username))
+        receive_name = input()
         while True:
-            self.client_send_message()
-            self.client_get_message()
+            self.client_send_message(username, receive_name)
 
 if __name__ == '__main__':
     c = Client()

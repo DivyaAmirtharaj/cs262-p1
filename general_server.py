@@ -66,14 +66,14 @@ class ChatServer:
         sock.sendall(to_send.encode('UTF-8'))
         return True
 
-    def send_or_queue_message(self, message, user_from, user_to_send):
+    def send_or_queue_message(self, message, from_id, user_from, user_to_send):
         """
         Sends specifically chat messages to a client socket. Concatenates
         the username of the sender with the message, so that the receiving
         user knows who the message is from. Only sends the message over the
         socket if the receiving user is logged in.
         """
-        cat_message = user_from + ":" + message
+                
         if self.check_user_in_db(user_to_send):
             user_to_send_sock = self.user_sockets[user_to_send]
         else:
@@ -81,12 +81,14 @@ class ChatServer:
 
         # check login status of receiving user
         if self.db.is_logged_in(user_to_send):
+            cat_message = user_from + ":" + message
             result = self.send_message(user_to_send_sock, "C", 0, cat_message)
             if not result:
                 return False, 2
         else:
             # if not logged in, add message the receiving users queue
-            self.db.add_message(user_from, user_to_send, cat_message)
+            receive_id = self.db.get_uuid(user_to_send)
+            self.db.add_message(from_id, receive_id, message)
         
         return True, 0
     
@@ -154,6 +156,27 @@ class ChatServer:
             raise Exception("Client died")
         data = c.recv(1024)
         return data
+    
+    def check_history_for_deleted_sender(self, history):
+        """
+        Checks a list of chat history messages retrieved from the database
+        and replaces the sender with 'deleted' if the sender no longer exists
+        in the database. Returns the amended history.
+        """
+        checked_history = []
+        for item in history:
+            if "send_id" not in item or "message" not in item:
+                continue 
+            from_uuid = item["send_id"]
+            message = item["message"]
+            try:
+                user_from = self.db.get_username(from_uuid)
+            except Exception as e:
+                user_from = "Deleted"
+            checked_history.append(user_from + ":" + message)
+        
+        return checked_history
+            
     
     def pack_arr_as_str(self, arr):
         """
@@ -249,18 +272,18 @@ class ChatServer:
                     # if it does not exist, indicate that this user
                     # has been deleted
                     print("User has been deleted")
-                    user_from = "Deleted"
+                    continue
 
-                success, status = self.send_or_queue_message(text_message, user_from, user_to_send)
+                success, status = self.send_or_queue_message(text_message, from_uuid, user_from, user_to_send)
 
                 self.send_message(c, "S", status, "")
 
             elif opcode == "4":
                 # get history
-                username = str(data_list[1])
+                uuid = int(data_list[1])
 
                 try:
-                    all_history = self.db.get_all_history(username)
+                    all_history = self.db.get_all_history(uuid)
                 except Exception as e:
                     # If there is no new message history,
                     # indicate this to the client
@@ -268,6 +291,7 @@ class ChatServer:
                     self.send_message(c, "S", 1, "")
                     continue
                 
+                all_history = self.check_history_for_deleted_sender(all_history)
                 all_history_message = self.pack_arr_as_str(all_history)
 
                 # send history as a chat message
@@ -275,13 +299,13 @@ class ChatServer:
 
                 if success:
                     self.send_message(c, "S", 0, "")
+                    self.db.delete_history_for_receiver(uuid)
                 else:
                     self.send_message(c, "S", 2, "")
             
             elif opcode == "5":
                 # get matching users
                 wildcard = str(data_list[1])
-                username = str(data_list[2])
 
                 try:
                     matching_users = self.db.get_usernames(wildcard)
@@ -302,8 +326,12 @@ class ChatServer:
                     self.send_message(c, "S", 2, "")
 
             else:
-                # delete account
-                print("implement")
+                username = str(data_list[1])
+                try:
+                    self.db.delete_user(username)
+                except Exception as e:
+                    self.send_message(c, "S", 1, "")
+                self.send_message(c, "S", 0, "")
             
         c.close()
 

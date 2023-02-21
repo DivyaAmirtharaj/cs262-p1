@@ -1,6 +1,8 @@
 import sqlite3
 import re
 
+MAX_MESSAGE_LEN = 280
+
 def thread_db(fn):
     def set_up(self, *args, **kwargs):
         con = sqlite3.connect("chat.db")
@@ -13,7 +15,7 @@ def thread_db(fn):
 
 class Database(object):
     def __init__(self) -> None:
-        pass
+        self.deleted_user_id = 0
 
     @thread_db
     def create_table(self, con, cur):
@@ -40,8 +42,7 @@ class Database(object):
     @thread_db
     def add_message(self, con, cur, send_id, receive_id, message):
         # insert messages into database for a sender and a receiver
-        print(message)
-        if len(message) > 256:
+        if len(message) > MAX_MESSAGE_LEN:
             raise Exception("Messages must be less than 256 characters")
         
         # selects the most recent message
@@ -90,6 +91,7 @@ class Database(object):
                 raise Exception("Receiver doesn't exist")
             history.append({"send_name": send_name, "receive_name": receive_name, "message": row[3]})
         return history
+
     
     @thread_db
     def get_all_history(self, con, cur, receive_id):
@@ -105,11 +107,21 @@ class Database(object):
         except Exception as e:
             print(e)
         
+        history = []
         if rows is None or len(rows) == 0:
             print("No message history")
             raise Exception
-        return rows
+        for row in rows:
+            history.append({'send_id': row[1], 'message': row[3]})
+        return history
     
+    @thread_db
+    def delete_history_for_receiver(self, con, cur, receive_id):
+        cur.execute("""
+            DELETE FROM messages WHERE (receive_id = ?)
+        """, [receive_id])
+        con.commit()
+
     @thread_db
     def get_username(self, con, cur, uuid):
         try:
@@ -205,7 +217,9 @@ class Database(object):
     
     @thread_db
     def delete_user(self, con, cur, username):
-        #delete a user and all of the messages that a user has sent or received
+        """
+        Delete a user and all of the messages that a user has received.
+        """
         uuid = self.get_uuid(username)
         cur.execute("""
                     DELETE FROM users WHERE (username = ?)

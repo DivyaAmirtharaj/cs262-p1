@@ -292,6 +292,10 @@ class ChatServer:
                 
                 all_history = self.check_history_for_deleted_sender(all_history)
                 all_history_message = self.pack_arr_as_str(all_history)
+                # limit the history to the most recent if total history is
+                # over the message length limit
+                if len(all_history_message) > MAX_MSG_LEN:
+                    all_history_message = all_history_message[-1 * MAX_MSG_LEN:]
 
                 # send history as a chat message
                 success = self.send_message(c, "C", 0, all_history_message)
@@ -316,6 +320,10 @@ class ChatServer:
                     continue
                 
                 matching_users_message = self.pack_arr_as_str(matching_users)
+                # limit the usernames to the first few results if 
+                # the total exceeds the maximum message length
+                if len(matching_users_message) > MAX_MSG_LEN:
+                    matching_users_message = matching_users_message[:MAX_MSG_LEN + 1]
                 # send the matching users as a message
                 success = self.send_message(c, "C", 0, matching_users_message)
                 

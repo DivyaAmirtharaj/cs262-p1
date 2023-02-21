@@ -7,6 +7,8 @@ message Empty {}
 message User {
     int64 uuid = 1;
     string username = 2;
+    string password = 3;
+    int64 login_status = 4;
 }
 
 message Chat {
@@ -22,6 +24,6 @@ message Outcome {
 
 service ChatBot {
     rpc server_send_chat (Chat) returns (Outcome);
-    rpc server_get_chat (User) returns (Chat); 
+    rpc server_get_chat (Chat) returns (stream Chat); 
     rpc server_create_account (User) returns (User);
 }

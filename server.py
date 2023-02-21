@@ -10,40 +10,40 @@ class Server(pb2_grpc.ChatBotServicer):
     def __init__(self):
         self.database = Database()
         self.username = ""
+        self.login_status = 0
+        self.database.delete_table()
+        self.database.create_table()
 
     # User management
     def server_create_account(self, request, context):
+        # add check here to make sure it's a unique username
         self.username = request.username
-        self.database.add_users(self.username)
+        password = request.password
+        self.login_status = request.login_status
+        self.database.add_users(self.username, password, self.login_status)
         uuid = self.database.get_uuid(self.username)
-        return pb2.User(uuid=uuid, username=self.username)
+        return pb2.User(uuid=uuid, username=self.username, password=password, login_status=self.login_status)
     
-    def server_login(self, request, context):
-        self.username = request.username
-        self.database.add_users(self.username)
-        uuid = self.database.get_uuid(self.username)
-        return pb2.User(uuid=uuid, username=self.username)
+    def server_login(self, request, context, username, password):
+        # update login status if successful sign in
+        pass
 
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
         try:
-            user = "testing"
+            receive_id = request.receive_id
+            send_id = request.send_id
             message = request.message
-            print("[{}] {}".format(user, message))
-            #get send_id, get to_id
-            #self.database.add_message(send_id, to_id, message)
+            self.database.add_message(send_id, receive_id, message)
         except Exception as e:
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")
     
     def server_get_chat(self, request, context):
-        # try:
-            # get messages from database (based on user id)
-        # except Exception as e:
-            # return []
-        #return messages
-        pass
-
+        send_id = request.send_id
+        receive_id = request.receive_id
+        messages = self.database.get_message(send_id, receive_id)
+        return messages
 
 
 if __name__ == '__main__':

@@ -133,9 +133,9 @@ class ChatClient:
                         if status == 0:
                             self.uuid = ord(response)
                             self.username = username
-                            print("Created account " + username)
+                            print("Status " + str(status) + ": " + "Created account " + username)
                         else:
-                            print("Username already exists. Pick a different one.")
+                            print("Status " + str(status) + ": " + "Username already exists. Pick a different one.")
                 # logging in
                 elif opcode == "2":
                     if len(args) < 3:
@@ -152,15 +152,15 @@ class ChatClient:
                             if not self.uuid:
                                 self.uuid = ord(response)
                             self.login = True
-                            print("Logged into account")
+                            print("Status " + str(status) + ": " + "Logged into account")
                         elif status == 1:
-                            print("Incorrect username.")
+                            print("Status " + str(status) + ": " + "Incorrect username.")
                         elif status == 2:
-                            print("Already logged in.")
+                            print("Status " + str(status) + ": " + "Already logged in.")
                         elif status == 3:
-                            print("Incorrect password.")
+                            print("Status " + str(status) + ": " + "Incorrect password.")
                         else:
-                            print("Unable to login")
+                            print("Status " + str(status) + ": " + "Unable to login")
                 # sending message
                 elif opcode == "3":
                     if len(args) < 3:
@@ -174,44 +174,47 @@ class ChatClient:
                         ans = "|".join([opcode, to_user, str(self.uuid) + ":" + args[2]])
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
-                            print("Delivered message to " + to_user)
+                            print("Status " + str(status) + ": " + "Delivered message to " + to_user)
                         elif status == 1:
-                            print("Could not deliver to " + to_user + ". Check if this username exists")
+                            print("Status " + str(status) + ": " + "Could not deliver to " + to_user + ". Check if this username exists")
                         elif status == 2:
-                            print("Message was too long. Keep messages under 280 characters.")
+                            print("Status " + str(status) + ": " + "Message was too long. Keep messages under 280 characters.")
                         else:
-                            print("Unable to send message")
+                            print("Status " + str(status) + ": " + "Unable to send message")
                 elif opcode == "4":
                     if not self.login:
                         print("Must be logged in to perform this action")
                     else:
                         status, response = self.send_and_get_response(ans + "|" + str(self.uuid))
                         if status == 0:
-                            print("Retrieved all history for " + self.username)
+                            print("Status " + str(status) + ": " + "Retrieved all history for " + self.username)
                         elif status == 1:
-                            print("No unread messages")
+                            print("Status " + str(status) + ": " + "No unread messages")
                         else:
-                            print("Unable to retrieve history")
+                            print("Status " + str(status) + ": " + "Unable to retrieve history")
                 elif opcode == "5":
                     if len(args) < 2:
                         print("Incorrect parameters: correct form is 5|[regex_wildcard]")
                     else:
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
-                            print("Found all matching users")
+                            print("Status " + str(status) + ": " + "Found all matching users")
                         elif status == 1:
-                            print("No matching users")
+                            print("Status " + str(status) + ": " + "No matching users")
                         else:
-                            print("Unable to retrieve matching users")
+                            print("Status " + str(status) + ": " + "Unable to retrieve matching users")
                 elif opcode == "6":
                     if not self.login:
                         print("Must be logged in to perform this action")
                     else:
                         status, response = self.send_and_get_response(ans + "|" + self.username)
                         if status == 0:
-                            print("Your account has been deleted.")
+                            self.login = False
+                            self.username = None
+                            self.uuid = None
+                            print("Status " + str(status) + ": " + "Your account has been deleted.")
                         else:
-                            print ("Unable to delete account.")
+                            print ("Status " + str(status) + ": " + "Unable to delete account.")
                 else:
                     print("Invalid opcode. 1 = create account, 2 = login, 3 = send, 4 = fetch, 5 = search, 6 = delete")
                 continue

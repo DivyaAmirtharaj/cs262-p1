@@ -94,7 +94,7 @@ def test_get_message():
     assert(uuid == 1)
     
     try:
-        history = db.get_message(send_id, receive_id)
+        history = db.get_message(receive_id)
         print(history)
     except:
         print("Failed to get message history")
@@ -196,6 +196,14 @@ def test_deletion():
         history = db.get_all_history(username)
     except:
         print("(Correctly) did not find any messages")
+    
+    try:
+        history = db.get_all_history(send_uuid)
+        print(history)
+    except:
+        print("Did not find any messages")
+    
+    assert(len(history) == 1)
 
     
     

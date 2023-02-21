@@ -176,7 +176,6 @@ class ChatServer:
             checked_history.append(user_from + ":" + message)
         
         return checked_history
-            
     
     def pack_arr_as_str(self, arr):
         """

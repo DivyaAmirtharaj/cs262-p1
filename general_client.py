@@ -116,10 +116,14 @@ class ChatClient:
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 2|[username]|[pwd]")
                     else:
+                        username = args[1]
+                        if self.login:
+                            print("Already logged in. Cannot login again or to another account.")
+
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
                             if not self.username:
-                                self.username = args[1]
+                                self.username = username
                             if not self.uuid:
                                 self.uuid = ord(response)
                             self.login = True

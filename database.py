@@ -1,6 +1,8 @@
 import sqlite3
 import re
 
+MAX_MESSAGE_LEN = 280
+
 def thread_db(fn):
     def set_up(self, *args, **kwargs):
         con = sqlite3.connect("chat.db")
@@ -40,8 +42,7 @@ class Database(object):
     @thread_db
     def add_message(self, con, cur, send_id, receive_id, message):
         # insert messages into database for a sender and a receiver
-        print(message)
-        if len(message) > 256:
+        if len(message) > MAX_MESSAGE_LEN:
             raise Exception("Messages must be less than 256 characters")
         
         # selects the most recent message
@@ -99,10 +100,13 @@ class Database(object):
         except Exception as e:
             print(e)
         
+        history = []
         if rows is None or len(rows) == 0:
             print("No message history")
             raise Exception
-        return rows
+        for row in rows:
+            history.append({'receive_id': row[2], 'message': row[3]})
+        return history
 
     @thread_db
     def get_username(self, con, cur, uuid):

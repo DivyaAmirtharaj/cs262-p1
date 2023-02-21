@@ -109,6 +109,7 @@ class Database(object):
             history.append({'send_id': row[1], 'message': row[3]})
         return history
     
+    @thread_db
     def delete_history_for_receiver(self, con, cur, receive_id):
         cur.execute("""
             DELETE FROM messages WHERE (receive_id = ?)

@@ -102,6 +102,9 @@ class ChatClient:
                 if opcode == "1":
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 1|[username]|[pwd]")
+                    elif self.login:
+                        print("Already logged in. Cannot create another account while logged in.")
+                        continue
                     else:
                         username = args[1]
                         status, response = self.send_and_get_response(ans)
@@ -115,11 +118,11 @@ class ChatClient:
                 elif opcode == "2":
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 2|[username]|[pwd]")
+                    elif self.login:
+                        print("Already logged in. Cannot login again or to another account.")
+                        continue
                     else:
                         username = args[1]
-                        if self.login:
-                            print("Already logged in. Cannot login again or to another account.")
-
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
                             if not self.username:
@@ -160,7 +163,7 @@ class ChatClient:
                     if not self.login:
                         print("Must be logged in to perform this action")
                     else:
-                        status, response = self.send_and_get_response(ans + "|" + self.username)
+                        status, response = self.send_and_get_response(ans + "|" + str(self.uuid))
                         if status == 0:
                             print("Retrieved all history for " + self.username)
                         elif status == 1:
@@ -171,7 +174,7 @@ class ChatClient:
                     if len(args) < 2:
                         print("Incorrect parameters: correct form is 5|[regex_wildcard]")
                     else:
-                        status, response = self.send_and_get_response(ans + "|" + self.username)
+                        status, response = self.send_and_get_response(ans)
                         if status == 0:
                             print("Found all matching users")
                         elif status == 1:
@@ -179,8 +182,14 @@ class ChatClient:
                         else:
                             print("Unable to retrieve matching users")
                 elif opcode == "6":
-                    print("implement")
-                    # delete account
+                    if not self.login:
+                        print("Must be logged in to perform this action")
+                    else:
+                        status, response = self.send_and_get_response(ans + "|" + self.username)
+                        if status == 0:
+                            print("Your account has been deleted.")
+                        else:
+                            print ("Unable to delete account.")
                 else:
                     print("Invalid opcode. 1 = create account, 2 = login, 3 = send, 4 = fetch, 5 = search, 6 = delete")
                 continue

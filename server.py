@@ -64,11 +64,13 @@ class Server(pb2_grpc.ChatBotServicer):
     @list_to_protobuf(pb2.Chat)
     def server_get_chat(self, request, context):
         receive_id = self.database.get_uuid(request.username)
+        print(receive_id)
         try:
             messages = self.database.get_message(receive_id)
+            print(messages)
         except Exception as e:
-            return iter([])
-        return iter(messages)
+            return []
+        return messages
 
 if __name__ == '__main__':
     port = 11921

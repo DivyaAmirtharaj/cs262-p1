@@ -15,6 +15,7 @@ message Chat {
     string send_name = 1;
     string receive_name = 2;
     string message = 3;
+    int64 msgid = 4;
 }
 
 message Id {

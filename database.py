@@ -89,7 +89,8 @@ class Database(object):
             receive_name = cur.fetchone()
             if receive_name is None:
                 raise Exception("Receiver doesn't exist")
-            history.append({"send_name": send_name, "receive_name": receive_name, "message": row[3]})
+            #history.append({"send_name": send_name[0], "receive_name": receive_name[0], "message": row[3]})
+            history.append({"msgid": row[0], "send_name": send_name[0], "receive_name": receive_name[0], "message": row[3]})
         return history
 
     

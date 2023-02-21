@@ -15,7 +15,7 @@ def thread_db(fn):
 
 class Database(object):
     def __init__(self) -> None:
-        pass
+        self.deleted_user_id = 0
 
     @thread_db
     def create_table(self, con, cur):
@@ -85,6 +85,7 @@ class Database(object):
         for row in rows:
             history.append({'send_id': row[1], 'receive_id': row[2], 'message': row[3]})
         return history
+
     
     @thread_db
     def get_all_history(self, con, cur, receive_id):
@@ -105,8 +106,14 @@ class Database(object):
             print("No message history")
             raise Exception
         for row in rows:
-            history.append({'receive_id': row[2], 'message': row[3]})
+            history.append({'send_id': row[1], 'message': row[3]})
         return history
+    
+    def delete_history_for_receiver(self, con, cur, receive_id):
+        cur.execute("""
+            DELETE FROM messages WHERE (receive_id = ?)
+        """, [receive_id])
+        con.commit()
 
     @thread_db
     def get_username(self, con, cur, uuid):
@@ -203,7 +210,9 @@ class Database(object):
     
     @thread_db
     def delete_user(self, con, cur, username):
-        #delete a user and all of the messages that a user has sent or received
+        """
+        Delete a user and all of the messages that a user has received.
+        """
         uuid = self.get_uuid(username)
         cur.execute("""
                     DELETE FROM users WHERE (username = ?)

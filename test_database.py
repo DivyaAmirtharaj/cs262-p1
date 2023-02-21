@@ -101,20 +101,43 @@ def test_get_message():
 
 def test_get_history():
     username = "divya"
+    uuid = db.get_uuid(username)
+    send_username = "kat"
+    send_uuid = db.get_uuid(send_username)
     try:
-        db.add_message("kat", "divya", "hi divya!")
-        db.add_message("kat", "divya", ":)")
+        db.add_message(send_uuid, uuid, "hi divya!")
+        db.add_message(send_uuid, uuid, ":)")
         print("Success, added messages to database!")
-    except Exception as e:
+    except:
         print("Failed to add message")
     
     try:
-        history = db.get_all_history(username)
-        print(history)
+        history = db.get_all_history(uuid)
+        print("Got history " + str(history))
     except:
         print("Failed to get message history")
     
     assert(len(history) == 2)
+
+    try:
+        db.delete_history_for_receiver(uuid)
+        print("Success")
+    except:
+        print("Failed to delete history")
+    
+    try:
+        history = db.get_all_history(send_uuid)
+        print("Got history " + str(history))
+    except:
+        print("Failed to get message history")
+    
+    assert(len(history) == 1)
+
+    try:
+        history = db.get_all_history(uuid)
+        print(history)
+    except:
+        print("(Correctly) did not find message history")
 
 def test_wildcard():
     try:
@@ -138,6 +161,42 @@ def test_wildcard():
         print("Did not find usernames")
     
     assert(len(usernames) == 2)
+
+def test_deletion():
+    username = "divya"
+    uuid = db.get_uuid(username)
+    send_username = "kat"
+    send_uuid = db.get_uuid(send_username)
+
+    try:
+        db.add_message(send_uuid, uuid, "hi divya!")
+        db.add_message(send_uuid, uuid, ":)")
+        print("Success, added messages to database!")
+    except Exception as e:
+        print("Failed to add message")
+
+    try:
+        db.delete_user("divya")
+    except:
+        print("Did not find user")
+    
+    try:
+        usernames = db.get_usernames("divya")
+    except:
+        print("(Correctly) did not find usernames")
+    
+    try:
+        usernames = db.get_usernames(".*")
+    except:
+        print("Did not find usernames")
+
+    assert(len(usernames) == 1)
+    
+    try:
+        history = db.get_all_history(username)
+    except:
+        print("(Correctly) did not find any messages")
+
     
     
 if __name__ == "__main__":
@@ -147,3 +206,4 @@ if __name__ == "__main__":
     test_get_message()
     test_get_history()
     test_wildcard()
+    test_deletion()

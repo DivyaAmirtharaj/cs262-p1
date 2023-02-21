@@ -35,6 +35,8 @@ class ChatServer:
         """
         Checks if a username is in the database by trying to retrieve
         its uuid. If nothing is returned, catch exception and return.
+
+        return: Boolean representng whether the user is in the database
         """
         try: 
             uuid_exists = self.db.get_uuid(username)
@@ -49,6 +51,9 @@ class ChatServer:
         Sends a message to a client socket. Concatenates operation
         status, message length, and message type (chat or server response)
         and sends it to the user.
+
+        return: Boolean representing whether the message was successfully
+        sent
         """
         message_len = len(message)
         if message_len > MAX_MSG_LEN:
@@ -61,6 +66,7 @@ class ChatServer:
         to_send = chr(status) + chr(message_len)
         to_send += message_type + message
         print(to_send)
+
         assert(len(to_send) == HEADER_LENGTH + len(message))
         sock.sendall(to_send.encode('UTF-8'))
         return True
@@ -71,6 +77,9 @@ class ChatServer:
         the username of the sender with the message, so that the receiving
         user knows who the message is from. Only sends the message over the
         socket if the receiving user is logged in.
+
+        return: Boolean representing success of the operation, int representing
+        status (to be sent to client)
         """
                 
         if self.check_user_in_db(user_to_send):
@@ -98,6 +107,9 @@ class ChatServer:
         an exception is raised, the username already exists. Returns the
         UUID (created by the database) of this new user and the status
         of account creation.
+
+        return: Boolean representing success of the operation, int for the UUID (-1
+        if the user already exists)
         """
         pwdHash = hash(pwd)
         try:
@@ -121,6 +133,10 @@ class ChatServer:
         the password is incorrect and returns a status code accordingly.
         If the operation succeeds, store the socket for this user and
         return its UUID to be sent to the client.
+
+        return: Boolean representing success of the operation, int that represents
+        the UUID if the operation was successful, or the status code for the exact 
+        error that occurred if not
         """
         user_exists = self.check_user_in_db(username)
         if not user_exists:
@@ -144,6 +160,8 @@ class ChatServer:
         client socket. Peeks at a single byte of data first in order
         to determine if the client is still online. If it is, receives
         1024 bytes from the client.
+
+        return: a UTF-8 string containing a request made by the client
         """
 
         # make sure client is still online
@@ -161,6 +179,8 @@ class ChatServer:
         Checks a list of chat history messages retrieved from the database
         and replaces the sender with 'deleted' if the sender no longer exists
         in the database. Returns the amended history.
+
+        return: a list of strings that include the changed history
         """
         checked_history = []
         for item in history:
@@ -180,6 +200,8 @@ class ChatServer:
         """
         Takes a list as items and formats them into a string.
         Used for getting message history and searching users.
+
+        return: a string concatenation of all the list items
         """
         return "\n".join([str(item) for item in arr])
 

@@ -36,6 +36,10 @@ class ChatClient:
             2nd byte: message length encoded as a unicode char
             3rd byte: single char 'C' or 'S' that indicates if 
             the received message is a message from another user or a server response
+        Reads the header and then the message by reading in fixed numbers of bytes
+        from the server
+
+        return: string message type, int status, string message received
         """
 
         # receive the header first
@@ -52,6 +56,8 @@ class ChatClient:
         """
         Receives k bytes from the server. Used to receive the (fixed-length) header
         and (known-length) messages from the server. Blocks until finished reading
+
+        return: string received message
         """
         total_bytes = 0
         received_message = ""
@@ -75,10 +81,16 @@ class ChatClient:
         return received_message
 
     def listener(self):
+        """
+        Called once the client is started in a separate thread so it can listen
+        for input from the server. Constantly receives from the server
+        """
         while True: 
             try:
                 message_type, status, received_message = self.recv_from_server(self.socket)
             except Exception as e:
+                # if nothing is received from the server, then the client has died
+                # we assume that the server never dies
                 print("You've been disconnected")
                 exit()
             # insert an exception for client death
@@ -87,28 +99,53 @@ class ChatClient:
             elif message_type == "S":
                 self.server_responses.put((status, received_message))
             else:
-                # make this an exception
-                print("bad message format")
+                print("Bad message format")
     
     def connect(self):
+        """
+        Connects to the server host and port and starts listening
+        """
         self.socket.connect((self.host, self.port))
         start_new_thread(self.listener, ())
     
     def send_and_get_response(self, data):
+        """
+        Sends ascii-encoded data from the client and then pops the most recent
+        queued message from the server immediately after (this works because
+        sockets preserve order)
+
+        return: Int status of operation from server, server's textual response
+        """
         self.socket.send(data.encode('ascii'))
         status, response = self.get_server_response()
         return status, response
 
     def get_server_response(self):
+        """
+        Tries to retrieve a server's response from the server responses queue.
+        
+        Return: Int status of operation from server, server's textual response
+        """
         try:
             status, response = self.server_responses.get(block=True, timeout=3)
             return status, response
         except queue.Empty:
-            print("empty")
+            # if the queue has nothing in it, then an error has occurred
+            print("Queue empty")
             return 4, None
     
     def run_client(self):
+        """
+        Called by main client thread to constantly prompt input from the client, do some
+        basic verification (e.g. correct arguments), and send client requests/input
+        to the server. Supports 6 operations: create account, login, send message
+        to another user, retrieve message history, search usernames by text wildcard,
+        and delete account. 
+
+        Valid requests are formatted as follows: [operation code]|[arg1]|[arg2]...
+        """
         while True:
+            # ask for input
             ans = input('\n> ')
             if ans == '':
                 ans2 = input('\nDo you want to continue(y/n) :')
@@ -117,6 +154,7 @@ class ChatClient:
                 else:
                     break
             else:
+                # retrieve arguments and operation code
                 args = ans.split("|")
                 opcode = args[0]
 
@@ -124,7 +162,9 @@ class ChatClient:
                 if opcode == "1":
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 1|[username]|[pwd]")
-                    elif self.login:
+                    elif self.login or self.username is not None:
+                        # do not allow account creation while logged in or associated
+                        # with another account -- 1 account per client
                         print("Already logged in. Cannot create another account while logged in.")
                         continue
                     else:

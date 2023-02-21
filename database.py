@@ -198,6 +198,18 @@ class Database(object):
         con.commit()
     
     @thread_db
+    def delete_user(self, con, cur, username):
+        #delete a user and all of the messages that a user has sent or received
+        uuid = self.get_uuid(username)
+        cur.execute("""
+                    DELETE FROM users WHERE (username = ?)
+                """, [username])
+        cur.execute("""
+                    DELETE FROM messages WHERE (receive_id = ?)
+                """, [uuid])
+        con.commit()
+
+    @thread_db
     def delete_table(self, con, cur):
         cur.execute("DROP table IF EXISTS messages")
         cur.execute("DROP table IF EXISTS users")

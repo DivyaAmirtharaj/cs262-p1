@@ -2,20 +2,11 @@ syntax = "proto3";
 
 package grpc;
 
-message Empty {}
-
 message User {
     int64 uuid = 1;
     string username = 2;
     string password = 3;
     int64 login_status = 4;
-}
-
-message Chat {
-    string send_name = 1;
-    string receive_name = 2;
-    string message = 3;
-    int64 msgid = 4;
 }
 
 message Id {
@@ -26,19 +17,27 @@ message Userlist {
     repeated string username = 1;
 }
 
+
+message Chat {
+    string send_name = 1;
+    string receive_name = 2;
+    string message = 3;
+    int64 msgid = 4;
+}
+
 message Outcome {
     int64 err_type = 1;
     string err_msg = 2;
 }
 
 service ChatBot {
-    rpc server_send_chat (Chat) returns (Outcome);
-    rpc server_get_chat (Id) returns (stream Chat); 
     rpc server_create_account (User) returns (User);
     rpc server_login (User) returns (User);
-    rpc server_check_user_exists (Id) returns (User);
     rpc server_check_login_status (Id) returns (User);
-    rpc server_get_user_list (Id) returns (Userlist);
+    rpc server_check_user_exists (Id) returns (User);
     rpc server_logout (Id) returns (User);
     rpc server_delete_user (Id) returns (Id);
+    rpc server_get_user_list (Id) returns (Userlist);
+    rpc server_send_chat (Chat) returns (Outcome);
+    rpc server_get_chat (Id) returns (stream Chat); 
 } 

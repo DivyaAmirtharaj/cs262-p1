@@ -14,16 +14,6 @@ class ChatBotStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.server_send_chat = channel.unary_unary(
-                '/grpc.ChatBot/server_send_chat',
-                request_serializer=protos_dot_service__pb2.Chat.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.Outcome.FromString,
-                )
-        self.server_get_chat = channel.unary_stream(
-                '/grpc.ChatBot/server_get_chat',
-                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.Chat.FromString,
-                )
         self.server_create_account = channel.unary_unary(
                 '/grpc.ChatBot/server_create_account',
                 request_serializer=protos_dot_service__pb2.User.SerializeToString,
@@ -34,20 +24,15 @@ class ChatBotStub(object):
                 request_serializer=protos_dot_service__pb2.User.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.User.FromString,
                 )
-        self.server_check_user_exists = channel.unary_unary(
-                '/grpc.ChatBot/server_check_user_exists',
-                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.User.FromString,
-                )
         self.server_check_login_status = channel.unary_unary(
                 '/grpc.ChatBot/server_check_login_status',
                 request_serializer=protos_dot_service__pb2.Id.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.User.FromString,
                 )
-        self.server_get_user_list = channel.unary_unary(
-                '/grpc.ChatBot/server_get_user_list',
+        self.server_check_user_exists = channel.unary_unary(
+                '/grpc.ChatBot/server_check_user_exists',
                 request_serializer=protos_dot_service__pb2.Id.SerializeToString,
-                response_deserializer=protos_dot_service__pb2.Userlist.FromString,
+                response_deserializer=protos_dot_service__pb2.User.FromString,
                 )
         self.server_logout = channel.unary_unary(
                 '/grpc.ChatBot/server_logout',
@@ -59,22 +44,25 @@ class ChatBotStub(object):
                 request_serializer=protos_dot_service__pb2.Id.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.Id.FromString,
                 )
+        self.server_get_user_list = channel.unary_unary(
+                '/grpc.ChatBot/server_get_user_list',
+                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Userlist.FromString,
+                )
+        self.server_send_chat = channel.unary_unary(
+                '/grpc.ChatBot/server_send_chat',
+                request_serializer=protos_dot_service__pb2.Chat.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Outcome.FromString,
+                )
+        self.server_get_chat = channel.unary_stream(
+                '/grpc.ChatBot/server_get_chat',
+                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.Chat.FromString,
+                )
 
 
 class ChatBotServicer(object):
     """Missing associated documentation comment in .proto file."""
-
-    def server_send_chat(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def server_get_chat(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def server_create_account(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -88,19 +76,13 @@ class ChatBotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def server_check_user_exists(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def server_check_login_status(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def server_get_user_list(self, request, context):
+    def server_check_user_exists(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -118,19 +100,27 @@ class ChatBotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def server_get_user_list(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def server_send_chat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def server_get_chat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatBotServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'server_send_chat': grpc.unary_unary_rpc_method_handler(
-                    servicer.server_send_chat,
-                    request_deserializer=protos_dot_service__pb2.Chat.FromString,
-                    response_serializer=protos_dot_service__pb2.Outcome.SerializeToString,
-            ),
-            'server_get_chat': grpc.unary_stream_rpc_method_handler(
-                    servicer.server_get_chat,
-                    request_deserializer=protos_dot_service__pb2.Id.FromString,
-                    response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
-            ),
             'server_create_account': grpc.unary_unary_rpc_method_handler(
                     servicer.server_create_account,
                     request_deserializer=protos_dot_service__pb2.User.FromString,
@@ -141,20 +131,15 @@ def add_ChatBotServicer_to_server(servicer, server):
                     request_deserializer=protos_dot_service__pb2.User.FromString,
                     response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
-            'server_check_user_exists': grpc.unary_unary_rpc_method_handler(
-                    servicer.server_check_user_exists,
-                    request_deserializer=protos_dot_service__pb2.Id.FromString,
-                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
-            ),
             'server_check_login_status': grpc.unary_unary_rpc_method_handler(
                     servicer.server_check_login_status,
                     request_deserializer=protos_dot_service__pb2.Id.FromString,
                     response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
-            'server_get_user_list': grpc.unary_unary_rpc_method_handler(
-                    servicer.server_get_user_list,
+            'server_check_user_exists': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_check_user_exists,
                     request_deserializer=protos_dot_service__pb2.Id.FromString,
-                    response_serializer=protos_dot_service__pb2.Userlist.SerializeToString,
+                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
             'server_logout': grpc.unary_unary_rpc_method_handler(
                     servicer.server_logout,
@@ -166,6 +151,21 @@ def add_ChatBotServicer_to_server(servicer, server):
                     request_deserializer=protos_dot_service__pb2.Id.FromString,
                     response_serializer=protos_dot_service__pb2.Id.SerializeToString,
             ),
+            'server_get_user_list': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_get_user_list,
+                    request_deserializer=protos_dot_service__pb2.Id.FromString,
+                    response_serializer=protos_dot_service__pb2.Userlist.SerializeToString,
+            ),
+            'server_send_chat': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_send_chat,
+                    request_deserializer=protos_dot_service__pb2.Chat.FromString,
+                    response_serializer=protos_dot_service__pb2.Outcome.SerializeToString,
+            ),
+            'server_get_chat': grpc.unary_stream_rpc_method_handler(
+                    servicer.server_get_chat,
+                    request_deserializer=protos_dot_service__pb2.Id.FromString,
+                    response_serializer=protos_dot_service__pb2.Chat.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'grpc.ChatBot', rpc_method_handlers)
@@ -175,40 +175,6 @@ def add_ChatBotServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class ChatBot(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def server_send_chat(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_send_chat',
-            protos_dot_service__pb2.Chat.SerializeToString,
-            protos_dot_service__pb2.Outcome.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def server_get_chat(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/grpc.ChatBot/server_get_chat',
-            protos_dot_service__pb2.Id.SerializeToString,
-            protos_dot_service__pb2.Chat.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def server_create_account(request,
@@ -245,23 +211,6 @@ class ChatBot(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def server_check_user_exists(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_check_user_exists',
-            protos_dot_service__pb2.Id.SerializeToString,
-            protos_dot_service__pb2.User.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def server_check_login_status(request,
             target,
             options=(),
@@ -279,7 +228,7 @@ class ChatBot(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def server_get_user_list(request,
+    def server_check_user_exists(request,
             target,
             options=(),
             channel_credentials=None,
@@ -289,9 +238,9 @@ class ChatBot(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_get_user_list',
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_check_user_exists',
             protos_dot_service__pb2.Id.SerializeToString,
-            protos_dot_service__pb2.Userlist.FromString,
+            protos_dot_service__pb2.User.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -326,5 +275,56 @@ class ChatBot(object):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_delete_user',
             protos_dot_service__pb2.Id.SerializeToString,
             protos_dot_service__pb2.Id.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_get_user_list(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_get_user_list',
+            protos_dot_service__pb2.Id.SerializeToString,
+            protos_dot_service__pb2.Userlist.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_send_chat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_send_chat',
+            protos_dot_service__pb2.Chat.SerializeToString,
+            protos_dot_service__pb2.Outcome.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_get_chat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/grpc.ChatBot/server_get_chat',
+            protos_dot_service__pb2.Id.SerializeToString,
+            protos_dot_service__pb2.Chat.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

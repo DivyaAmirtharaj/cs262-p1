@@ -17,7 +17,12 @@ def list_to_protobuf(tpe):
     return wrap
 
 class Server(pb2_grpc.ChatBotServicer):
-
+    """
+    Implements functionalities of a server for a client/server grpc chat app.
+    Receives objects from client (as defined in service.proto) and interfaces with
+    the database to store and query data.  The server and database are multi-threaded
+    and support constant streaming of data to the client.
+    """
     def __init__(self):
         # initialize database, ensure it's clean and build it again
         self.database = Database()

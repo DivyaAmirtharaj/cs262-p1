@@ -6,6 +6,13 @@ import protos.service_pb2 as pb2
 import time
 
 class Client:
+    """
+    Methods to implement a client or user via gRPC.  Clients initialize with an address and port (default to localhost).
+    We additionally implement multi-threading and our chat functionality implements continuous listening threads to pull
+    data nearly instantly (apart from the defined lag).  The main functionality is defined in run(), and relies on user 
+    input for fields such as username, and receiving username via the command line.  Objects are passed to the server
+    through predefined shapes as defined in our protos file.
+    """
     def __init__(self, address, port):
         self.address = address
         self.port = port
@@ -13,7 +20,7 @@ class Client:
         self.stub = pb2_grpc.ChatBotStub(self.channel)
         self.last_seen = []
 
-    # User management
+    # Client Side User management
     # Creates a new user object and adds information to the database
     def client_create_account(self, username, password):
         acc = pb2.User(username=username, password=password)
@@ -70,7 +77,7 @@ class Client:
         else:
             print("Failed to delete user")  
 
-    # Chatting management
+    # Client Side Chatting Management
     # Wild card function: gets all the usernames that match regex pattern
     def client_get_user_list(self, pattern):
         regpattern = pb2.Id(username=pattern)
@@ -112,7 +119,7 @@ class Client:
         return [pb2.Chat(m.send_name, m.receive_name, m.msg, m.msgid) for m in messages]
 
     # Creates and reads a constant stream of messages to continue refreshing client_get_message
-    def poll_for_messages(self, username, receive_name, event, delay = 2):
+    def stream_messages(self, username, receive_name, event, delay = 2):
         while True:
             time.sleep(delay)
             if username is None:
@@ -122,7 +129,6 @@ class Client:
 
 
     def run(self):
-        # Todo: verify server is connected
         # Todo: force logout if client crashes
        
         # Prompts user to either create a new account or log in
@@ -190,7 +196,7 @@ class Client:
                 stop_event = threading.Event()
                 while True:
                     # Runs the task of continously (with a 2 second lag) fetching messages from a specific user to a specific user
-                    thread = threading.Thread(target=self.poll_for_messages, args=(username, receive_name, stop_event, ), daemon=True)
+                    thread = threading.Thread(target=self.stream_messages, args=(username, receive_name, stop_event, ), daemon=True)
                     thread.start()
                     msg = input()
                     if msg == ":exit":

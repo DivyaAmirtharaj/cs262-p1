@@ -65,7 +65,7 @@ class ChatServer:
         
         to_send = chr(status) + chr(message_len)
         to_send += message_type + message
-        print(to_send)
+        #print(to_send)
 
         assert(len(to_send) == HEADER_LENGTH + len(message))
         sock.sendall(to_send.encode('UTF-8'))
@@ -100,7 +100,7 @@ class ChatServer:
         
         return True, 0
     
-    def create_account(self, username, pwd):  
+    def create_account(self, username, pwd, c):  
         """
         Attempts to create an account for client with the given username and password.
         Attempts to add this username and password to the database. If
@@ -123,7 +123,7 @@ class ChatServer:
         # has been added to the database
         uuid = self.db.get_uuid(username)
         # add this new user as a key in the socket dictionary
-        self.user_sockets[username] = None
+        self.user_sockets[username] = c
         return True, uuid
         
     def login(self, username, pwd, c):
@@ -144,11 +144,11 @@ class ChatServer:
         elif self.db.is_logged_in(username):
             return False, 2
         pwdHash = hash(pwd)
-        print(pwdHash)
         try:
             self.user_sockets[username] = c
             self.db.update_login(username, pwdHash, LOGGED_IN)
             uuid = self.db.get_uuid(username)
+            print("This " + str(uuid))
             return True, uuid
         except Exception as e:
             print(e)
@@ -222,16 +222,16 @@ class ChatServer:
 
                 # if the client dies, end this loop, log the user out,
                 # and reset the socket for the user.
-                lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
-                self.db.force_logout(lost_user)
-                self.user_sockets[lost_user] = None
+                if c in self.user_sockets.values():
+                    lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
+                    self.db.force_logout(lost_user)
+                    self.user_sockets[lost_user] = None
                 break
 
             data_str = data.decode('UTF-8')
             if not data:
                 print("No message received")
                 break
-            print(data_str + "\n")
 
             # Requests from a client are sent in the form of [opcode]|[arg1]|[arg2]...
             # The format of these requests has already been verified on the client side
@@ -249,13 +249,13 @@ class ChatServer:
                 username = str(data_list[1])
                 pwd = str(data_list[2])
                 
-                success, uuid = self.create_account(username, pwd)
+                success, uuid = self.create_account(username, pwd, c)
 
                 # if successful, return successful response
                 # and UUID of new user so it can be stored
                 # by the client
                 if success:
-                    self.send_message(c, "S", 0, chr(uuid))
+                    self.send_message(c, "S", 0, str(uuid))
                 else:
                     self.send_message(c, "S", 1, "")
             
@@ -270,7 +270,7 @@ class ChatServer:
                 # of this user, in case the client is logging back
                 # in to a preexisting account.
                 if success:
-                    self.send_message(c, "S", 0, chr(uuid_or_status))
+                    self.send_message(c, "S", 0, str(uuid_or_status))
                 else:
                     self.send_message(c, "S", uuid_or_status, "")
             

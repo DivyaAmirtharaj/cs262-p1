@@ -91,7 +91,6 @@ class ChatClient:
             except Exception as e:
                 # if nothing is received from the server, then the client has died
                 # we assume that the server never dies
-                print("You've been disconnected")
                 exit()
             # insert an exception for client death
             if message_type == "C":
@@ -124,10 +123,10 @@ class ChatClient:
         """
         Tries to retrieve a server's response from the server responses queue.
         
-        Return: Int status of operation from server, server's textual response
+        return: Int status of operation from server, server's textual response
         """
         try:
-            status, response = self.server_responses.get(block=True, timeout=3)
+            status, response = self.server_responses.get(block=True, timeout=10)
             return status, response
         except queue.Empty:
             # if the queue has nothing in it, then an error has occurred
@@ -168,9 +167,12 @@ class ChatClient:
                         print("Already logged in. Cannot create another account while logged in.")
                         continue
                     else:
+                        # extract username and then send the correctly formatted request
+                        # to the server and get its response
                         username = args[1]
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
+                            # if successful, set the params for this client
                             self.uuid = ord(response)
                             self.username = username
                             print("Status " + str(status) + ": " + "Created account " + username)
@@ -181,16 +183,19 @@ class ChatClient:
                     if len(args) < 3:
                         print("Incorrect parameters: correct form is 2|[username]|[pwd]")
                     elif self.login:
+                        # do not allow re-logging in or logging into another account
+                        # while logged in
                         print("Already logged in. Cannot login again or to another account.")
                         continue
                     else:
                         username = args[1]
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
-                            if not self.username:
+                            # set username, uuid, and login 
+                            if self.username is None:
                                 self.username = username
-                            if not self.uuid:
-                                self.uuid = ord(response)
+                            if self.uuid is None:
+                                self.uuid = int(response)
                             self.login = True
                             print("Status " + str(status) + ": " + "Logged into account")
                         elif status == 1:
@@ -259,7 +264,7 @@ class ChatClient:
                     print("Invalid opcode. 1 = create account, 2 = login, 3 = send, 4 = fetch, 5 = search, 6 = delete")
                 continue
         # close the connection
-        s.close()
+        self.socket.close()
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 2048

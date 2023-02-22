@@ -1,5 +1,6 @@
 import sqlite3
 import re
+import random
 
 MAX_MESSAGE_LEN = 280
 
@@ -165,20 +166,22 @@ class Database(object):
 
     @thread_db
     def add_users(self, con, cur, username, password, login_status):
-        cur.execute("""
-            SELECT uuid FROM users ORDER BY uuid DESC LIMIT 1
-        """)
-        latest = cur.fetchone()
-        if latest is None:
-            latest = 0
-        else:
-            latest = latest[0]
+        # cur.execute("""
+        #     SELECT uuid FROM users ORDER BY uuid DESC LIMIT 1
+        # """)
+        # latest = cur.fetchone()
+        # if latest is None:
+        #     latest = 0
+        # else:
+        #     latest = latest[0]
+
+        uuid = random.randint(1, 2**20)
 
         # add a new user to the database with a unique uuid
         cur.execute("""
             INSERT INTO users (uuid, username, password, login_status)
                 VALUES (?, ?, ?, ?)
-        """, [latest + 1, username, password, login_status])
+        """, [uuid, username, password, login_status])
 
         con.commit()
     

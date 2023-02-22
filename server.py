@@ -75,7 +75,7 @@ class Server(pb2_grpc.ChatBotServicer):
         username = request.username
         try:
             uuid = self.database.get_uuid(username)
-        except:
+        except Exception as e:
             return pb2.User(username="")
         if uuid != None:
             return pb2.User(username=username)

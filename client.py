@@ -53,8 +53,10 @@ class Client:
             query = self.stub.server_check_user_exists(user)
             if query.username == "":
                 return True
-        except Exception as e:
-            print(e)
+        except grpc.RpcError as e:
+            if e.code() != "OK":
+                print("Please start the server first")
+                exit()   
         return False
 
     # Calls server to switch login status value to indicate its logged out before exiting
@@ -87,14 +89,6 @@ class Client:
             print("No users were found with this pattern")
             return []
         return user_list
-
-        user = pb2.Id(username=username)
-        status = self.stub.server_logout(user)
-        if status.login_status == 0:
-            print("Successfully logged out")
-            exit()
-        else:
-            print("Failed to logout")
     
     # Send messages (messages will be queued and displayed later if a user doesn't have the right chat opened)
     def client_send_message(self, username, receive_name, msg):
@@ -129,7 +123,6 @@ class Client:
 
 
     def run(self):
-        # Todo: force logout if client crashes
        
         # Prompts user to either create a new account or log in
         account_status = input("Please select: \n1) Create account \n2) Login \n")

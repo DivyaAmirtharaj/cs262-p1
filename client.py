@@ -33,9 +33,12 @@ class Client:
 
     def client_check_user_exists(self, username):
         user = pb2.Id(username=username)
-        query = self.stub.server_check_user_exists(user)
-        if query.username == "":
-            return True
+        try:
+            query = self.stub.server_check_user_exists(user)
+            if query.username == "":
+                return True
+        except Exception as e:
+            print(e)
         return False
 
     def client_check_login_status(self, username):
@@ -80,7 +83,7 @@ class Client:
         if new_account.username == "":
             print("That username is taken, please choose another one")
         return new_account
-
+    
     # Chatting functionality
     def client_send_message(self, username, receive_name):
         msg = sys.stdin.readline()
@@ -99,10 +102,11 @@ class Client:
                 continue
             msgs = self.client_get_message(username, receive_name)
 
+
     def run(self):
         # Todo: verify server is connected
         # Todo: force logout if client crashes
-
+       
         # login/ create new account
         account_status = input("Please select: \n1) Create account \n2) Login \n")
         while account_status not in ("1", "2"):
@@ -152,9 +156,11 @@ class Client:
                 print("Welcome {}!  Who would you like to message/ view messages from?".format(username))
                 receive_name = input("Recipient: ")
                 # Todo: check if the user exists
-                while True:
+                chatting = True
+                while chatting == True:
                     threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
                     self.client_send_message(username, receive_name)
+                    chatting = False
             
             # Log out of account
             elif action == "3":

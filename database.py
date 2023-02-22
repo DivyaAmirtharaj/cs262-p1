@@ -16,7 +16,8 @@ def thread_db(fn):
 
 class Database(object):
     def __init__(self) -> None:
-
+        pass
+    
     @thread_db
     def create_table(self, con, cur):
         # create user table

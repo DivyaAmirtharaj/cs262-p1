@@ -89,7 +89,7 @@ class ChatClient:
             try:
                 message_type, status, received_message = self.recv_from_server(self.socket)
             except Exception as e:
-                # if nothing is received from the server, then the client has died
+                # if nothing is xreceived from the server, then the client has died
                 # we assume that the server never dies
                 exit()
             # insert an exception for client death
@@ -126,7 +126,7 @@ class ChatClient:
         return: Int status of operation from server, server's textual response
         """
         try:
-            status, response = self.server_responses.get(block=True, timeout=10)
+            status, response = self.server_responses.get(block=True, timeout=5)
             return status, response
         except queue.Empty:
             # if the queue has nothing in it, then an error has occurred
@@ -173,7 +173,7 @@ class ChatClient:
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
                             # if successful, set the params for this client
-                            self.uuid = ord(response)
+                            self.uuid = int(response)
                             self.username = username
                             print("Status " + str(status) + ": " + "Created account " + username)
                         else:

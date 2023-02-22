@@ -42,7 +42,6 @@ class ChatServer:
             uuid_exists = self.db.get_uuid(username)
         except Exception as e:
             print("Username is invalid")
-            print(e)
             return False
         return True
 
@@ -65,7 +64,7 @@ class ChatServer:
         
         to_send = chr(status) + chr(message_len)
         to_send += message_type + message
-        #print(to_send)
+        print(to_send)
 
         assert(len(to_send) == HEADER_LENGTH + len(message))
         sock.sendall(to_send.encode('UTF-8'))
@@ -95,7 +94,10 @@ class ChatServer:
                 return False, 2
         else:
             # if not logged in, add message the receiving users queue
-            receive_id = self.db.get_uuid(user_to_send)
+            try:
+                receive_id = self.db.get_uuid(user_to_send)
+            except:
+                return False, 1
             self.db.add_message(from_id, receive_id, message)
         
         return True, 0
@@ -115,15 +117,13 @@ class ChatServer:
         try:
             self.db.add_users(username, pwdHash, LOGGED_OUT)
         except Exception as e:
-            print(e)
             print("Repeat user")
             return False, -1
-        
+        self.user_sockets[username] = c
         # this operation will succeed because the user
         # has been added to the database
         uuid = self.db.get_uuid(username)
         # add this new user as a key in the socket dictionary
-        self.user_sockets[username] = c
         return True, uuid
         
     def login(self, username, pwd, c):
@@ -140,8 +140,10 @@ class ChatServer:
         """
         user_exists = self.check_user_in_db(username)
         if not user_exists:
+            print("User doesn't exist")
             return False, 1
         elif self.db.is_logged_in(username):
+            print("Is already logged in")
             return False, 2
         pwdHash = hash(pwd)
         try:
@@ -170,7 +172,11 @@ class ChatServer:
         if len(data) == 0:
             # if not, raise an exception to be caught
             # in the main serving loop
-            raise Exception("Client died")
+            if c in list(self.user_sockets.values()):
+                lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
+                self.db.force_logout(lost_user)
+                self.user_sockets[lost_user] = None
+                raise Exception("Client died")
         data = c.recv(1024)
         return data
     
@@ -190,6 +196,7 @@ class ChatServer:
             message = item["message"]
             try:
                 user_from = self.db.get_username(from_uuid)
+                print(user_from)
             except Exception as e:
                 user_from = "Deleted"
             checked_history.append(user_from + ":" + message)
@@ -218,17 +225,16 @@ class ChatServer:
                 data = self.recv_from_socket(c)
             except Exception as e:
                 print(e)
-                print("Client died")
-
                 # if the client dies, end this loop, log the user out,
                 # and reset the socket for the user.
-                if c in self.user_sockets.values():
+                if c in list(self.user_sockets.values()):
                     lost_user = list(self.user_sockets.keys())[list(self.user_sockets.values()).index(c)]
                     self.db.force_logout(lost_user)
                     self.user_sockets[lost_user] = None
                 break
 
             data_str = data.decode('UTF-8')
+            print(data_str)
             if not data:
                 print("No message received")
                 break
@@ -250,7 +256,6 @@ class ChatServer:
                 pwd = str(data_list[2])
                 
                 success, uuid = self.create_account(username, pwd, c)
-
                 # if successful, return successful response
                 # and UUID of new user so it can be stored
                 # by the client
@@ -265,7 +270,6 @@ class ChatServer:
                 pwd = str(data_list[2])
                 
                 success, uuid_or_status = self.login(username, pwd, c)
-
                 # if successful, return succesful response and UUID
                 # of this user, in case the client is logging back
                 # in to a preexisting account.
@@ -292,6 +296,7 @@ class ChatServer:
                     # if it does not exist, indicate that this user
                     # has been deleted
                     print("User has been deleted")
+                    self.send_message(c, "S", 1, "")
                     continue
 
                 success, status = self.send_or_queue_message(text_message, from_uuid, user_from, user_to_send)

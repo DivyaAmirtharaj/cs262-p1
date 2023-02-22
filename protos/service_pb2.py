@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14protos/service.proto\x12\x04grpc\"\x07\n\x05\x45mpty\"N\n\x04User\x12\x0c\n\x04uuid\x18\x01 \x01(\x03\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\x12\x14\n\x0clogin_status\x18\x04 \x01(\x03\"O\n\x04\x43hat\x12\x11\n\tsend_name\x18\x01 \x01(\t\x12\x14\n\x0creceive_name\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\r\n\x05msgid\x18\x04 \x01(\x03\"\x16\n\x02Id\x12\x10\n\x08username\x18\x01 \x01(\t\",\n\x07Outcome\x12\x10\n\x08\x65rr_type\x18\x01 \x01(\x03\x12\x0f\n\x07\x65rr_msg\x18\x02 \x01(\t2\xa1\x02\n\x07\x43hatBot\x12-\n\x10server_send_chat\x12\n.grpc.Chat\x1a\r.grpc.Outcome\x12)\n\x0fserver_get_chat\x12\x08.grpc.Id\x1a\n.grpc.Chat0\x01\x12/\n\x15server_create_account\x12\n.grpc.User\x1a\n.grpc.User\x12&\n\x0cserver_login\x12\n.grpc.User\x1a\n.grpc.User\x12\x30\n\x18server_check_user_exists\x12\x08.grpc.Id\x1a\n.grpc.User\x12\x31\n\x19server_check_login_status\x12\x08.grpc.Id\x1a\n.grpc.Userb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14protos/service.proto\x12\x04grpc\"\x07\n\x05\x45mpty\"N\n\x04User\x12\x0c\n\x04uuid\x18\x01 \x01(\x03\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t\x12\x14\n\x0clogin_status\x18\x04 \x01(\x03\"O\n\x04\x43hat\x12\x11\n\tsend_name\x18\x01 \x01(\t\x12\x14\n\x0creceive_name\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\r\n\x05msgid\x18\x04 \x01(\x03\"\x16\n\x02Id\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1c\n\x08Userlist\x12\x10\n\x08username\x18\x01 \x03(\t\",\n\x07Outcome\x12\x10\n\x08\x65rr_type\x18\x01 \x01(\x03\x12\x0f\n\x07\x65rr_msg\x18\x02 \x01(\t2\xd3\x02\n\x07\x43hatBot\x12-\n\x10server_send_chat\x12\n.grpc.Chat\x1a\r.grpc.Outcome\x12)\n\x0fserver_get_chat\x12\x08.grpc.Id\x1a\n.grpc.Chat0\x01\x12/\n\x15server_create_account\x12\n.grpc.User\x1a\n.grpc.User\x12&\n\x0cserver_login\x12\n.grpc.User\x1a\n.grpc.User\x12\x30\n\x18server_check_user_exists\x12\x08.grpc.Id\x1a\n.grpc.User\x12\x31\n\x19server_check_login_status\x12\x08.grpc.Id\x1a\n.grpc.User\x12\x30\n\x14server_get_user_list\x12\x08.grpc.Id\x1a\x0e.grpc.Userlistb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'protos.service_pb2', globals())
@@ -28,8 +28,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _CHAT._serialized_end=198
   _ID._serialized_start=200
   _ID._serialized_end=222
-  _OUTCOME._serialized_start=224
-  _OUTCOME._serialized_end=268
-  _CHATBOT._serialized_start=271
-  _CHATBOT._serialized_end=560
+  _USERLIST._serialized_start=224
+  _USERLIST._serialized_end=252
+  _OUTCOME._serialized_start=254
+  _OUTCOME._serialized_end=298
+  _CHATBOT._serialized_start=301
+  _CHATBOT._serialized_end=640
 # @@protoc_insertion_point(module_scope)

@@ -23,6 +23,15 @@ class Server(pb2_grpc.ChatBotServicer):
         self.database.delete_table()
         self.database.create_table()
 
+    def server_get_user_list(self, request, context):
+        pattern = request.username
+        try:
+            users = self.database.get_usernames(pattern)
+        except Exception as e:
+            print(e)
+            return pb2.Userlist(username=[])
+        return pb2.Userlist(username=users)
+
     # User management
     def server_check_user_exists(self, request, context):
         username = request.username

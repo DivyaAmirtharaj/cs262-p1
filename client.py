@@ -13,7 +13,16 @@ class Client:
         self.channel = grpc.insecure_channel('localhost:11912')
         self.stub = pb2_grpc.ChatBotStub(self.channel)
         self.last_seen = []
-    
+
+    def client_get_user_list(self, pattern):
+        regpattern = pb2.Id(username=pattern)
+        try:
+            user_list = self.stub.server_get_user_list(regpattern)
+        except Exception as e:
+            print("No users were found with this pattern")
+            return []
+        return user_list
+
     def client_login(self, username, password):
         n = pb2.User()
         n.username = username
@@ -106,24 +115,27 @@ class Client:
                 print("Your password is incorrect, try again")
                 password = input("Password: ")
 
-        # Potential login options
+        # Available options once you login
         while True:
             action = input("\nWelcome {}!  Choose one of the following: \n1) Find users \n2) Chat \n3) Logout \n4) Delete account\n".format(username))
             while action not in ("1", "2", "3", "4"):
                 action = input("Please select only these options: \n1) Find users \n2) Send message \n3) Logout \n4) Delete account")
 
-            if action == "2":
-                # send message
+            if action == "1":
+                pattern = input("Please enter the regex pattern for the users you are searching for: ")
+                users = self.client_get_user_list(pattern)
+                if users:
+                    print("Users matching this pattern:")
+                    print(users.username)
+            
+            # Send message to a specific user & load the message history they sent
+            elif action == "2":
                 print("Welcome {}!  Who would you like to message/ view messages from?".format(username))
-                receive_name = input()
-                chat_open = True
-                #threading.Thread(target=self.poll_for_messages, args=(username, ), daemon=True).start()
-                while chat_open == True:
-                    proc = threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True)
-                    proc.start()
+                receive_name = input("Recipient: ")
+                # Todo: check if the user exists
+                while True == True:
+                    proc = threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
                     self.client_send_message(username, receive_name)
-                    if input() == ":exit":
-                        chat_open = False
             
             elif action == "3":
                 print("logout")

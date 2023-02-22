@@ -22,6 +22,10 @@ message Id {
     string username = 1;
 }
 
+message Userlist {
+    repeated string username = 1;
+}
+
 message Outcome {
     int64 err_type = 1;
     string err_msg = 2;
@@ -34,4 +38,5 @@ service ChatBot {
     rpc server_login (User) returns (User);
     rpc server_check_user_exists (Id) returns (User);
     rpc server_check_login_status (Id) returns (User);
+    rpc server_get_user_list (Id) returns (Userlist);
 } 

@@ -191,7 +191,14 @@ class Client:
                     # Runs the task of continously (with a 2 second lag) fetching messages from a specific user to a specific user
                     thread = threading.Thread(target=self.stream_messages, args=(username, receive_name, stop_event, ), daemon=True)
                     thread.start()
+                    msg_len = False
                     msg = input()
+                    while msg_len is False:
+                        if len(msg) > 280:
+                            print("Please enter a shorter message, the limit is 280 characters")
+                            msg = input("Message: ")
+                        else:
+                            msg_len = True
                     if msg == ":exit":
                         # quits thread if the user leaves the chat, messages will be loaded when the user comes back
                         stop_event.set()

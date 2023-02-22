@@ -50,10 +50,19 @@ class Server(pb2_grpc.ChatBotServicer):
             val = self.database.verify_username_password(username)
             if val is None:
                 return pb2.User(username="")
+            if (val[0] == username and val[1] == password):
+                print("Correct username and password, logging in!")
+                new_login_status = 1
+                try:
+                    self.database.update_login(username, password, new_login_status)
+                except Exception as e:
+                    print(e)
+                    return pb2.User(uuid=0, username="")
+                return pb2.User(username=username)
         except Exception as e:
             print(e)
         
-        if (val[0] == username and val[1] == password):
+        '''if (val[0] == username and val[1] == password):
             print("Correct username and password, logging in!")
             new_login_status = 1
             try:
@@ -61,7 +70,7 @@ class Server(pb2_grpc.ChatBotServicer):
             except Exception as e:
                 print(e)
                 return pb2.User(uuid=0, username="")
-            return pb2.User(username=username)
+            return pb2.User(username=username)'''
         return pb2.User(username="")
 
     # Verifies what the login_status of a user is-- prevents duplicate logins
@@ -118,13 +127,12 @@ class Server(pb2_grpc.ChatBotServicer):
 
     # Adds a sent message to the database and returns success
     def server_send_chat(self, request: pb2.Chat, context):
-        send_id = self.database.get_uuid(request.send_name)
-        receive_id = self.database.get_uuid(request.receive_name)
-        message = request.message
         try:
+            send_id = self.database.get_uuid(request.send_name)
+            receive_id = self.database.get_uuid(request.receive_name)
+            message = request.message
             self.database.add_message(send_id, receive_id, message)
         except Exception as e:
-            print(e)
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")
     

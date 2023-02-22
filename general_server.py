@@ -150,7 +150,6 @@ class ChatServer:
             self.user_sockets[username] = c
             self.db.update_login(username, pwdHash, LOGGED_IN)
             uuid = self.db.get_uuid(username)
-            print("This " + str(uuid))
             return True, uuid
         except Exception as e:
             print(e)
@@ -196,7 +195,6 @@ class ChatServer:
             message = item["message"]
             try:
                 user_from = self.db.get_username(from_uuid)
-                print(user_from)
             except Exception as e:
                 user_from = "Deleted"
             checked_history.append(user_from + ":" + message)
@@ -349,12 +347,12 @@ class ChatServer:
                 # limit the usernames to the first few results if 
                 # the total exceeds the maximum message length
                 if len(matching_users_message) > MAX_MSG_LEN:
-                    matching_users_message = matching_users_message[:MAX_MSG_LEN + 1]
+                    matching_users_message = matching_users_message[:MAX_MSG_LEN]
                 # send the matching users as a message
                 success = self.send_message(c, "C", 0, matching_users_message)
                 
                 if success:
-                    self.send_message(c, "S", 0, "")
+                    self.send_message(c, "S", 0, str(len(matching_users)))
                 else:
                     self.send_message(c, "S", 2, "")
 

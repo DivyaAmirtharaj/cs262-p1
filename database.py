@@ -193,6 +193,8 @@ class Database(object):
             print(e)
         
         status = cur.fetchone()
+        if status is None:
+            return 0
         return status[0]
     
     @thread_db

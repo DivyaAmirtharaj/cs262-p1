@@ -85,13 +85,13 @@ class Client:
         return new_account
     
     # Chatting functionality
-    def client_send_message(self, username, receive_name):
-        msg = sys.stdin.readline()
+    def client_send_message(self, username, receive_name, msg):
+        message = msg
         if msg != "":
             m = pb2.Chat()
             m.send_name = username
             m.receive_name = receive_name
-            m.message = msg
+            m.message = message
             #print("[{}] {}".format(username, m.message))
             return self.stub.server_send_chat(m)
 
@@ -100,7 +100,7 @@ class Client:
             time.sleep(delay)
             if username is None:
                 continue
-            msgs = self.client_get_message(username, receive_name)
+            self.client_get_message(username, receive_name)
 
 
     def run(self):
@@ -159,8 +159,11 @@ class Client:
                 chatting = True
                 while chatting == True:
                     threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
-                    self.client_send_message(username, receive_name)
-                    chatting = False
+                    msg = input()
+                    if msg == ":exit":
+                        break
+                    else:
+                        self.client_send_message(username, receive_name, msg)
             
             # Log out of account
             elif action == "3":

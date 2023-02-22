@@ -243,7 +243,7 @@ class ChatClient:
                     else:
                         status, response = self.send_and_get_response(ans)
                         if status == 0:
-                            print("Status " + str(status) + ": " + "Found " + response + "matching users")
+                            print("Status " + str(status) + ": " + "Found " + response + " matching users")
                         elif status == 1:
                             print("Status " + str(status) + ": " + "No matching users")
                         else:

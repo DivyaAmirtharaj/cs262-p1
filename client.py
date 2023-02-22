@@ -95,12 +95,13 @@ class Client:
             #print("[{}] {}".format(username, m.message))
             return self.stub.server_send_chat(m)
 
-    def poll_for_messages(self, username, receive_name, delay = 2):
+    def poll_for_messages(self, username, receive_name, event, delay = 2):
         while True:
             time.sleep(delay)
             if username is None:
                 continue
-            self.client_get_message(username, receive_name)
+            while not event.is_set():
+                self.client_get_message(username, receive_name)
 
 
     def run(self):
@@ -155,12 +156,14 @@ class Client:
             elif action == "2":
                 print("Welcome {}!  Who would you like to message/ view messages from?".format(username))
                 receive_name = input("Recipient: ")
+                stop_event = threading.Event()
                 # Todo: check if the user exists
-                chatting = True
-                while chatting == True:
-                    threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
+                while True:
+                    thread = threading.Thread(target=self.poll_for_messages, args=(username, receive_name, stop_event, ), daemon=True)
+                    thread.start()
                     msg = input()
                     if msg == ":exit":
+                        stop_event.set()
                         break
                     else:
                         self.client_send_message(username, receive_name, msg)

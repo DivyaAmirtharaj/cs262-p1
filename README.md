@@ -2,6 +2,12 @@
 
 This is a simple, client-server chat application built using sockets and gRPC. It runs on python3. 
 
+Installation:
+
+`pip install sqlite3`
+`python -m pip install grpcio`
+`python -m pip install grpcio-tools`
+
 ## Wire Protocol
 
 First, we describe the wire protocol design part of the assignment. 

@@ -16,7 +16,6 @@ def thread_db(fn):
 
 class Database(object):
     def __init__(self) -> None:
-        self.deleted_user_id = 0
 
     @thread_db
     def create_table(self, con, cur):

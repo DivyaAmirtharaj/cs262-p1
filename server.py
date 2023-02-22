@@ -19,43 +19,12 @@ def list_to_protobuf(tpe):
 class Server(pb2_grpc.ChatBotServicer):
 
     def __init__(self):
+        # initialize database, ensure it's clean and build it again
         self.database = Database()
         self.database.delete_table()
         self.database.create_table()
 
-    def server_get_user_list(self, request, context):
-        pattern = request.username
-        try:
-            users = self.database.get_usernames(pattern)
-        except Exception as e:
-            print(e)
-            return pb2.Userlist(username=[])
-        return pb2.Userlist(username=users)
-
-    # User management
-    def server_check_user_exists(self, request, context):
-        username = request.username
-        try:
-            uuid = self.database.get_uuid(username)
-        except:
-            return pb2.User(username="")
-        if uuid != None:
-            return pb2.User(username=username)
-        return pb2.User(username="")
-
-    def server_delete_user(self, request, context):
-        username = request.username
-        try:
-            self.database.delete_user(username)
-        except Exception as e:
-            print(e)
-        try:
-            uuid = self.database.get_uuid(username)
-        except Exception as e:
-            print("Account was successfully deleted")
-            return pb2.User(username="")
-        return pb2.User(username=username)
-
+    # Server Side User management
     # Creates a new user from the username and password provided
     def server_create_account(self, request, context):
         username = request.username
@@ -90,11 +59,24 @@ class Server(pb2_grpc.ChatBotServicer):
             return pb2.User(username=username)
         return pb2.User(username="")
 
+    # Verifies what the login_status of a user is-- prevents duplicate logins
     def server_check_login_status(self, request, context):
         username = request.username
         status = self.database.is_logged_in(username)
         return pb2.User(login_status=status)
     
+    # Queries the uuid of a user to ensure it exists in the table
+    def server_check_user_exists(self, request, context):
+        username = request.username
+        try:
+            uuid = self.database.get_uuid(username)
+        except:
+            return pb2.User(username="")
+        if uuid != None:
+            return pb2.User(username=username)
+        return pb2.User(username="")
+
+    # Switches logout status to 0 and queries to make sure logout was successful
     def server_logout(self, request, context):
         username = request.username
         try:
@@ -104,7 +86,32 @@ class Server(pb2_grpc.ChatBotServicer):
         status = self.database.is_logged_in(username)
         return pb2.User(login_status=status)
 
-    # Chatting functionality
+    # Deletes user from USERS table as well as all their received messages
+    def server_delete_user(self, request, context):
+        username = request.username
+        try:
+            self.database.delete_user(username)
+        except Exception as e:
+            print(e)
+        try:
+            uuid = self.database.get_uuid(username)
+        except Exception as e:
+            print("Account was successfully deleted")
+            return pb2.User(username="")
+        return pb2.User(username=username)
+
+    # Server Side Chatting Management
+    # Wild card function that queries all potential matching usernames from database
+    def server_get_user_list(self, request, context):
+        pattern = request.username
+        try:
+            users = self.database.get_usernames(pattern)
+        except Exception as e:
+            print(e)
+            return pb2.Userlist(username=[])
+        return pb2.Userlist(username=users)
+
+    # Adds a sent message to the database and returns success
     def server_send_chat(self, request: pb2.Chat, context):
         send_id = self.database.get_uuid(request.send_name)
         receive_id = self.database.get_uuid(request.receive_name)
@@ -116,6 +123,7 @@ class Server(pb2_grpc.ChatBotServicer):
             return pb2.Outcome(err_type=1, err_msg=e)
         return pb2.Outcome(err_type=0, err_msg="success")
     
+    # Streams chat history from database back to the client.
     @list_to_protobuf(pb2.Chat)
     def server_get_chat(self, request, context):
         receive_id = self.database.get_uuid(request.username)
@@ -126,11 +134,12 @@ class Server(pb2_grpc.ChatBotServicer):
         return messages
 
 if __name__ == '__main__':
-    port = 11921
+    address = "localhost"
+    port = 11912
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))  # create a gRPC server
     pb2_grpc.add_ChatBotServicer_to_server(Server(), server)  # register the server to gRPC
-    print('Starting server. Listening...')
-    server.add_insecure_port('localhost:11912')
+    print('Server is listening!')
+    server.add_insecure_port("{}:{}".format(address, port))
     server.start()
     while True:
         time.sleep(64 * 64 * 100)

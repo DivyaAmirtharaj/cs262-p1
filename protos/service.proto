@@ -40,4 +40,5 @@ service ChatBot {
     rpc server_check_login_status (Id) returns (User);
     rpc server_get_user_list (Id) returns (Userlist);
     rpc server_logout (Id) returns (User);
+    rpc server_delete_user (Id) returns (Id);
 } 

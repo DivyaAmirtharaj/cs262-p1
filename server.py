@@ -43,6 +43,19 @@ class Server(pb2_grpc.ChatBotServicer):
             return pb2.User(username=username)
         return pb2.User(username="")
 
+    def server_delete_user(self, request, context):
+        username = request.username
+        try:
+            self.database.delete_user(username)
+        except Exception as e:
+            print(e)
+        try:
+            uuid = self.database.get_uuid(username)
+        except Exception as e:
+            print("Account was successfully deleted")
+            return pb2.User(username="")
+        return pb2.User(username=username)
+
     # Creates a new user from the username and password provided
     def server_create_account(self, request, context):
         username = request.username

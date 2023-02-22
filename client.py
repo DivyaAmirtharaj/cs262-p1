@@ -45,6 +45,15 @@ class Client:
             return True
         return False
     
+    def client_delete_user(self, username):
+        user = pb2.Id(username=username)  
+        deleted = self.stub.server_delete_user(user)
+        if deleted.username == "":
+            print("Successfully deleted user")
+            exit()
+        else:
+            print("Failed to delete user")  
+    
     def client_logout(self, username):
         user = pb2.Id(username=username)
         status = self.stub.server_logout(user)
@@ -147,16 +156,13 @@ class Client:
                     threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
                     self.client_send_message(username, receive_name)
             
+            # Log out of account
             elif action == "3":
-                success = self.client_logout(username)
-                if success == True:
-                    print("Successfully logged out")
-                    exit()
-                else:
-                    print("Failed to logout")
+                self.client_logout(username)
             
+            # Delete account
             elif action == "4":
-                print("delete")
+                self.client_delete_user(username)
 
 if __name__ == '__main__':
     c = Client()

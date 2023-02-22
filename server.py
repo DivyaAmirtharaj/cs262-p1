@@ -24,6 +24,15 @@ class Server(pb2_grpc.ChatBotServicer):
         self.database.create_table()
 
     # User management
+    def server_check_user_exists(self, request, context):
+        username = request.username
+        try:
+            uuid = self.database.get_uuid(username)
+        except:
+            return pb2.User(username="")
+        if uuid != None:
+            return pb2.User(username=username)
+        return pb2.User(username="")
 
     # Creates a new user from the username and password provided
     def server_create_account(self, request, context):
@@ -41,14 +50,29 @@ class Server(pb2_grpc.ChatBotServicer):
     def server_login(self, request, context):
         username = request.username
         password = request.password
-        new_login_status = 1
         try:
-            self.database.update_login(username, password, new_login_status)
+            val = self.database.verify_username_password(username)
+            if val is None:
+                return pb2.User(username="")
         except Exception as e:
             print(e)
-            return pb2.User(uuid=0, username="")
-        return pb2.User(username=username) 
+        
+        if (val[0] == username and val[1] == password):
+            print("Correct username and password, logging in!")
+            new_login_status = 1
+            try:
+                self.database.update_login(username, password, new_login_status)
+            except Exception as e:
+                print(e)
+                return pb2.User(uuid=0, username="")
+            return pb2.User(username=username)
+        return pb2.User(username="")
 
+    def server_check_login_status(self, request, context):
+        username = request.username
+        status = self.database.is_logged_in(username)
+        return pb2.User(login_status=status)
+    
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
         send_id = self.database.get_uuid(request.send_name)
@@ -64,10 +88,8 @@ class Server(pb2_grpc.ChatBotServicer):
     @list_to_protobuf(pb2.Chat)
     def server_get_chat(self, request, context):
         receive_id = self.database.get_uuid(request.username)
-        print(receive_id)
         try:
             messages = self.database.get_message(receive_id)
-            print(messages)
         except Exception as e:
             return []
         return messages

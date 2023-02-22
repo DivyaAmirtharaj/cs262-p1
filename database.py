@@ -93,7 +93,6 @@ class Database(object):
             #history.append({"send_name": send_name[0], "receive_name": receive_name[0], "message": row[3]})
             history.append({"msgid": row[0], "send_name": send_name[0], "receive_name": receive_name[0], "message": row[3]})
         return history
-
     
     @thread_db
     def get_all_history(self, con, cur, receive_id):
@@ -118,11 +117,31 @@ class Database(object):
         return history
     
     @thread_db
+    def pop_message(self, con, cur, receive_id, msgid):
+        cur.execute("""
+            DELETE FROM messages WHERE (receive_id = ?) and (msgid = msgid)
+        """, [receive_id, msgid])
+        con.commit()
+
+    @thread_db
     def delete_history_for_receiver(self, con, cur, receive_id):
         cur.execute("""
             DELETE FROM messages WHERE (receive_id = ?)
         """, [receive_id])
         con.commit()
+
+    @thread_db
+    def verify_username_password(self, con, cur, username):
+        try:
+            cur.execute("""
+                SELECT username, password FROM users WHERE (username = ?)
+            """, [username])
+        except Exception as e:
+            print(e)
+        user = cur.fetchone()
+        if user is None:
+            raise Exception("No user exists with this name")
+        return user
 
     @thread_db
     def get_username(self, con, cur, uuid):

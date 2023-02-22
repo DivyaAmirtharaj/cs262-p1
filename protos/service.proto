@@ -32,4 +32,6 @@ service ChatBot {
     rpc server_get_chat (Id) returns (stream Chat); 
     rpc server_create_account (User) returns (User);
     rpc server_login (User) returns (User);
-}
+    rpc server_check_user_exists (Id) returns (User);
+    rpc server_check_login_status (Id) returns (User);
+} 

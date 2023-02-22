@@ -194,8 +194,8 @@ class Client:
                     msg_len = False
                     msg = input()
                     while msg_len is False:
-                        if len(msg) > 280:
-                            print("Please enter a shorter message, the limit is 280 characters")
+                        if len(msg) > 280 or len(msg) < 1:
+                            print("Please enter a non-empty message that is 280 characters or less")
                             msg = input("Message: ")
                         else:
                             msg_len = True

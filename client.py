@@ -45,6 +45,15 @@ class Client:
             return True
         return False
     
+    def client_logout(self, username):
+        user = pb2.Id(username=username)
+        status = self.stub.server_logout(user)
+        if status.login_status == 0:
+            print("Successfully logged out")
+            exit()
+        else:
+            print("Failed to logout")
+
     def client_get_message(self, username, receive_name):
         n = pb2.Id()
         n.username = username
@@ -120,7 +129,8 @@ class Client:
             action = input("\nWelcome {}!  Choose one of the following: \n1) Find users \n2) Chat \n3) Logout \n4) Delete account\n".format(username))
             while action not in ("1", "2", "3", "4"):
                 action = input("Please select only these options: \n1) Find users \n2) Send message \n3) Logout \n4) Delete account")
-
+            
+            # Wildcard (user searching)
             if action == "1":
                 pattern = input("Please enter the regex pattern for the users you are searching for: ")
                 users = self.client_get_user_list(pattern)
@@ -133,12 +143,17 @@ class Client:
                 print("Welcome {}!  Who would you like to message/ view messages from?".format(username))
                 receive_name = input("Recipient: ")
                 # Todo: check if the user exists
-                while True == True:
-                    proc = threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
+                while True:
+                    threading.Thread(target=self.poll_for_messages, args=(username, receive_name, ), daemon=True).start()
                     self.client_send_message(username, receive_name)
             
             elif action == "3":
-                print("logout")
+                success = self.client_logout(username)
+                if success == True:
+                    print("Successfully logged out")
+                    exit()
+                else:
+                    print("Failed to logout")
             
             elif action == "4":
                 print("delete")

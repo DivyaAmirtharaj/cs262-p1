@@ -49,6 +49,11 @@ class ChatBotStub(object):
                 request_serializer=protos_dot_service__pb2.Id.SerializeToString,
                 response_deserializer=protos_dot_service__pb2.Userlist.FromString,
                 )
+        self.server_logout = channel.unary_unary(
+                '/grpc.ChatBot/server_logout',
+                request_serializer=protos_dot_service__pb2.Id.SerializeToString,
+                response_deserializer=protos_dot_service__pb2.User.FromString,
+                )
 
 
 class ChatBotServicer(object):
@@ -96,6 +101,12 @@ class ChatBotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def server_logout(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatBotServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -133,6 +144,11 @@ def add_ChatBotServicer_to_server(servicer, server):
                     servicer.server_get_user_list,
                     request_deserializer=protos_dot_service__pb2.Id.FromString,
                     response_serializer=protos_dot_service__pb2.Userlist.SerializeToString,
+            ),
+            'server_logout': grpc.unary_unary_rpc_method_handler(
+                    servicer.server_logout,
+                    request_deserializer=protos_dot_service__pb2.Id.FromString,
+                    response_serializer=protos_dot_service__pb2.User.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -260,5 +276,22 @@ class ChatBot(object):
         return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_get_user_list',
             protos_dot_service__pb2.Id.SerializeToString,
             protos_dot_service__pb2.Userlist.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def server_logout(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/grpc.ChatBot/server_logout',
+            protos_dot_service__pb2.Id.SerializeToString,
+            protos_dot_service__pb2.User.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

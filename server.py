@@ -82,6 +82,15 @@ class Server(pb2_grpc.ChatBotServicer):
         status = self.database.is_logged_in(username)
         return pb2.User(login_status=status)
     
+    def server_logout(self, request, context):
+        username = request.username
+        try:
+            self.database.force_logout(username)
+        except Exception as e:
+            print(e)
+        status = self.database.is_logged_in(username)
+        return pb2.User(login_status=status)
+
     # Chatting functionality
     def server_send_chat(self, request: pb2.Chat, context):
         send_id = self.database.get_uuid(request.send_name)
